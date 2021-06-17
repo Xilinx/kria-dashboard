@@ -1,0 +1,22 @@
+.custom_table .slick-header-column {
+            background-color: #15191C !important;
+            background-image: none !important;
+            color:#E0E0E0 !important;
+            }
+
+.custom_table .slick-row {
+            background-color: #15191C !important;
+            background-image: none !important;
+            color:#E0E0E0 !important;
+}
+
+.custom_table .bk-cell-index {
+            background-color: #15191C !important;
+            background-image: none !important;
+            color:#E0E0E0 !important;
+}
+
+.custom_textinput {
+            background-color: #15191C !important;
+            color:#E0E0E0 !important;
+}
