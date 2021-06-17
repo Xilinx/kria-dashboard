@@ -7,3 +7,4 @@ http://*IP_ADDRESS*:5006/som_dashboard
 
 
 Current view:
+![Alt text](screenshot.PNG?raw=true "Title")
