@@ -15,7 +15,6 @@ from bokeh.layouts import layout
 import global_var
 
 
-
 def get_mem(memtype):
     mem_val = int(
         ''.join(filter(str.isdigit, str(subprocess.run(['/bin/grep', memtype, '/proc/meminfo'], capture_output=True)))))
@@ -32,14 +31,12 @@ def clear_min_max():
     average_cpu_sample_size = 0
 
 
-
 sample_size = 60
 sample_size_actual = 60
 interval = 1
 x = deque([0] * sample_size)
 color_list = ["darkseagreen", "steelblue", "indianred", "chocolate", "mediumpurple", "rosybrown", "gold",
               "mediumaquamarine"]
-
 
 cpu_labels = [
     "A-53_Core_0",
@@ -252,7 +249,8 @@ input_sample_size.on_change('value', update_sample_size)
 
 time = 0
 
-#average_cpu_gauge = pn.indicators.Gauge(name='Average CPU Utilization', value=0, bounds=(0, 100))
+
+# average_cpu_gauge = pn.indicators.Gauge(name='Average CPU Utilization', value=0, bounds=(0, 100))
 
 
 @linear()
@@ -284,8 +282,8 @@ def update(step):
            "&nbsp; &nbsp; Average CPU utilization over last " + str(average_cpu_sample_size) + \
            " sample is " + str(round(average_cpu, 2)) + """%</h2>"""
     average_cpu_display.text = text
-    #average_cpu_gauge.name = "Average CPU utilization over last " + str(average_cpu_sample_size)
-    #average_cpu_gauge.value = str(round(average_cpu, 2))
+    # average_cpu_gauge.name = "Average CPU utilization over last " + str(average_cpu_sample_size)
+    # average_cpu_gauge.value = str(round(average_cpu, 2))
 
     volts = []
     for j in range(len(volt_labels) - 1):
@@ -355,8 +353,10 @@ def update(step):
     if sample_size_actual < sample_size:
         sample_size_actual = sample_size_actual + 1
 
+
 # margin:  Margin-Top, Margin-Right, Margin-Bottom and Margin-Left
-user_interface = column(reset_button, input_sample_size, input_interval, background=global_var.bg_color, margin=(50, 50, 50, 100))
+user_interface = column(reset_button, input_sample_size, input_interval, background=global_var.bg_color,
+                        margin=(50, 50, 50, 100))
 layout1 = layout(column(row(title, align='center'),
                         average_cpu_display,
                         row(cpu_plot, user_interface, background=global_var.bg_color),
@@ -364,3 +364,7 @@ layout1 = layout(column(row(title, align='center'),
                         row(power_plot, current_plot, temp_plot, background=global_var.bg_color),
                         row(volt_data_table, temp_data_table, background=global_var.bg_color),
                         background=global_var.bg_color))
+
+
+# Add a periodic callback to be run every 1000 milliseconds
+callback = curdoc().add_periodic_callback(update, interval * 1000)
