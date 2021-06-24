@@ -6,7 +6,8 @@ from collections import deque
 from bokeh.layouts import row, column, gridplot
 from bokeh.models import ColumnDataSource, DataTable, DateFormatter, TableColumn, HTMLTemplateFormatter
 from bokeh.events import ButtonClick
-from bokeh.models import Button, Paragraph, Div
+from bokeh.models import Button, Div, CheckboxGroup
+from bokeh.models import Range1d
 from bokeh.themes import built_in_themes
 import subprocess
 from bokeh.models import HoverTool
@@ -176,7 +177,7 @@ volt_data_table = DataTable(source=min_max_volt_source, columns=min_max_volt_col
                             width=400, height=200, background=global_var.bg_color, css_classes=['custom_table'])
 
 # memory line plot
-mem_plot = figure(plot_width=800, plot_height=300, title='Memory Usage in kB')
+mem_plot = figure(plot_width=800, plot_height=300, title='Total Free Memory in kB')
 mem_ds = (mem_plot.line(x, mem_data["MemFree"], line_width=2,
                         color=color_list[0], legend_label="MemFree")).data_source
 mem_plot.legend.click_policy = "hide"
@@ -250,7 +251,28 @@ input_sample_size.on_change('value', update_sample_size)
 time = 0
 
 
-# average_cpu_gauge = pn.indicators.Gauge(name='Average CPU Utilization', value=0, bounds=(0, 100))
+# default_data_range = cpu_plot.y_range
+
+cpu_plot.y_range = Range1d(0, 100)
+mem_plot.y_range = Range1d(0, get_mem("MemTotal"))
+power_plot.y_range = Range1d(0, 6)
+current_plot.y_range = Range1d(0, 1000)
+temp_plot.y_range = Range1d(0, 100)
+
+
+# # dynamic scaling:
+# def update_scaling(attr, old, new):
+#     if new == [0]:
+#         cpu_plot.y_range = default_data_range
+#         cpu_plot.title.text = "name 1"
+#     else:
+#         cpu_plot.y_range = Range1d(0, 50)
+#         cpu_plot.title.text = "name 2"
+#
+# checkbox_labels = ["Enable Dynamic Y-axis Scaling"]
+# checkbox_group = CheckboxGroup(labels=checkbox_labels, active=[], css_classes=['custom_textinput'],)
+# checkbox_group.on_change('active', update_scaling)
+
 
 
 @linear()
@@ -355,7 +377,8 @@ def update(step):
 
 
 # margin:  Margin-Top, Margin-Right, Margin-Bottom and Margin-Left
-user_interface = column(reset_button, input_sample_size, input_interval, background=global_var.bg_color,
+user_interface = column(reset_button, input_sample_size, input_interval, #checkbox_group,
+                        background=global_var.bg_color,
                         margin=(50, 50, 50, 100))
 layout1 = layout(column(row(title, align='center'),
                         average_cpu_display,
