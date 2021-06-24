@@ -13,7 +13,7 @@ To install Bokeh on 2021.1:
     sudo pip3 install panel
     
     
-to execute, copy all the files onto a directory on SOM platform in a folder (lets say we name it som_dashboard), and then execute from that directory:
+to execute, copy all the files onto a directory on SOM platform in a folder (lets say we name it som_dashboard), and then execute outside that directory:
 
   	
     sudo bokeh serve --show --allow-websocket-origin=*IP_ADDRESS*:5006 som_dashboard/
