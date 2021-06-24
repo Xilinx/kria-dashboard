@@ -5,15 +5,13 @@ To install Bokeh on 2020.2:
 
   sudo pip3 install bokeh==2.1
   
-  note: after 6/23 - this project only works with 2021.1
-
 To install Bokeh on 2021.1:
 
   sudo pip3 install panel
 
 to execute, copy all the files onto a directory on SOM platform in a folder (lets say we name it som_dashboard), and then execute from that directory:
 
-  sudo bokeh serve --show --allow-websocket-origin=*IP_ADDRESS*:5006 som_dashboard/
+  '''sudo bokeh serve --show --allow-websocket-origin=*IP_ADDRESS*:5006 som_dashboard/'''
 
 in a browser go to the following url:
 
