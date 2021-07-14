@@ -1,3 +1,18 @@
+# Copyright 2021 Xilinx Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import layout, row, column, gridplot
 from bokeh.models.widgets import Tabs, Panel
@@ -113,7 +128,7 @@ current_data = deque([0] * sample_size)
 power_data = deque([0] * sample_size)
 
 # title
-title = Div(
+title1 = Div(
     text="""<h1 style="color :""" + global_var.text_color + """; text-align :center">Kria Zynq MPSoc Platform Statistic</h1>""",
     width=450)
 
@@ -381,7 +396,7 @@ def update(step):
 user_interface = column(reset_button, input_sample_size, input_interval, #checkbox_group,
                         background=global_var.bg_color,
                         margin=(50, 50, 50, 100))
-layout1 = layout(column(row(title, align='center'),
+layout1 = layout(column(row(title1, align='center'),
                         average_cpu_display,
                         row(cpu_plot, user_interface, background=global_var.bg_color),
                         row(mem_plot, mem_plot_hbar, background=global_var.bg_color),
@@ -401,9 +416,9 @@ callback = curdoc().add_periodic_callback(update, interval * 1000)
 
 
 
-title = Div(
+title2 = Div(
     text="""<h1 style="color :""" + global_var.text_color + """; text-align :center">Kria Zynq MPSoc Application Cockpit</h1>""",
-    width=600)
+    width=500)
 
 
 def xmutil_unloadapp():
@@ -412,7 +427,7 @@ def xmutil_unloadapp():
     subprocess.run(["sudo", "xmutil", "unloadapp"])
     draw_apps()
     #draw_app_run_buttons()
-    layout2.children[4] = column(load_buttons)
+    layout2.children[4] = column(load_buttons, margin=(0, 0, 0, 50))
     layout2.children[1] = active_app_print
     #layout2.children[2] = row(run_buttons)
 
@@ -429,7 +444,7 @@ def xmutil_loadapp(app_name):
     subprocess.run(command, shell=True, capture_output=True)
     draw_apps()
     #draw_app_run_buttons()
-    layout2.children[4] = column(load_buttons)
+    layout2.children[4] = column(load_buttons, margin=(0, 0, 0, 50))
     layout2.children[1] = active_app_print
     #layout2.children[2] = row(run_buttons)
 
@@ -484,8 +499,9 @@ def draw_apps():
 
 
 app_print = Div(
-    text="""<h2 style="color :""" + global_var.text_color + """; text-align :left">Available Accelerators on Local  
-    System, click blue options to load: </h2>""", width=800)
+    text="""<h2 style="color :""" + global_var.text_color + """; text-align :left">Available Accelerated applications on 
+     target to load</h2><h4 style="color :""" + global_var.text_color + """; text-align :left">&emsp;&emsp;Blue - click 
+    to load, Green - Loaded Accelerator, White - available to load after unloading</h4>""", width=1600)
 draw_apps()
 current_command = None
 
@@ -533,9 +549,8 @@ def run_app(run_command):
 # packages!!###########################################################################################################
 
 package_print = Div(
-    text="""<h2 style="color :""" + global_var.text_color + """; text-align :center">Available Reference Design 
-    Package, click to download: </h2>""",
-    width=600)
+    text="""<h2 style="color :""" + global_var.text_color + """; text-align :center">Available Accelerated Application 
+    Packages, click to download and DNF install</h2>""", width=1600)
 
 
 def dnf_install(app_name):
@@ -544,9 +559,9 @@ def dnf_install(app_name):
     subprocess.call(command, shell=True)
     print("finished command: ", command)
     draw_pkgs()
-    layout2.children[6] = column(pkgs_buttons)
+    layout2.children[6] = column(pkgs_buttons, margin=(0, 0, 0, 50))
     draw_apps()
-    layout2.children[4] = column(load_buttons)
+    layout2.children[4] = column(load_buttons, margin=(0, 0, 0, 50))
 
 
 pkgs_buttons = []
@@ -569,15 +584,22 @@ def draw_pkgs():
 
 draw_pkgs()
 
+
+app_print2 = Div(
+    text="""<h3 style="color :""" + global_var.text_color + """; text-align :center">To execute application, use command 
+    line or start Jupyter lab and use notebooks. </h3>""", width=1600)
+
+
 layout2 = layout([
-    [title],  # 0
+    row(title2, align='center'),  # 0
     [active_app_print],  # 1
     # row(run_buttons),  # 2
-    [unload_button],  # 2
+    column(unload_button, margin=(0, 0, 0, 50)),  # 2
     [app_print],  # 3
-    column(load_buttons),  # 4
+    column(load_buttons, margin=(0, 0, 0, 50)),  # 4
     [package_print],  # 5
-    column(pkgs_buttons),  # 6
+    column(pkgs_buttons, margin=(0, 0, 0, 50)),  # 6
+    row(app_print2, margin=(100, 0, 400, 0))
 ])
 layout2.background = global_var.bg_color
 
