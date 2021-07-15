@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import layout, row, column, gridplot
 from bokeh.models.widgets import Tabs, Panel
