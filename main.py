@@ -30,7 +30,9 @@ from collections import deque
 import subprocess
 from functools import partial
 
-import global_var
+bg_color = '#15191C'
+text_color = '#E0E0E0'
+
 
 ##################################################
 ##### Platform Stat Tab ##########################
@@ -128,7 +130,7 @@ power_data = deque([0] * sample_size)
 
 # title
 title1 = Div(
-    text="""<h1 style="color :""" + global_var.text_color + """; text-align :center">Kria&trade; SOM: Hardware Platform Statistics</h1>""",
+    text="""<h1 style="color :""" + text_color + """; text-align :center">Kria&trade; SOM: Hardware Platform Statistics</h1>""",
     width=450)
 
 # average cpu display
@@ -175,7 +177,7 @@ min_max_temp_column = [
 ]
 
 temp_data_table = DataTable(source=min_max_temp_source, columns=min_max_temp_column, index_position=None,
-                            width=400, height=200, background=global_var.bg_color, css_classes=['custom_table'])
+                            width=400, height=200, background=bg_color, css_classes=['custom_table'])
 
 # table of min/max for voltages
 max_volt = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -189,7 +191,7 @@ min_max_volt_column = [
 ]
 
 volt_data_table = DataTable(source=min_max_volt_source, columns=min_max_volt_column, index_position=None,
-                            width=400, height=200, background=global_var.bg_color, css_classes=['custom_table'])
+                            width=400, height=200, background=bg_color, css_classes=['custom_table'])
 
 # memory line plot
 mem_plot = figure(plot_width=800, plot_height=300, title='Total Free Memory in kB')
@@ -315,7 +317,7 @@ def update(step):
     average_cpu_sample_size = average_cpu_sample_size + 1
     average_cpu = (average_cpu + (average_cpu_x / 4)) / average_cpu_sample_size
 
-    text = """<h2 style="color :""" + global_var.text_color + """;">""" + \
+    text = """<h2 style="color :""" + text_color + """;">""" + \
            "&nbsp; &nbsp; Average CPU utilization over last " + str(average_cpu_sample_size) + \
            " sample is " + str(round(average_cpu, 2)) + """%</h2>"""
     average_cpu_display.text = text
@@ -393,15 +395,15 @@ def update(step):
 
 # margin:  Margin-Top, Margin-Right, Margin-Bottom and Margin-Left
 user_interface = column(reset_button, input_sample_size, input_interval, #checkbox_group,
-                        background=global_var.bg_color,
+                        background=bg_color,
                         margin=(50, 50, 50, 100))
 layout1 = layout(column(row(title1, align='center'),
                         average_cpu_display,
-                        row(cpu_plot, user_interface, background=global_var.bg_color),
-                        row(mem_plot, mem_plot_hbar, background=global_var.bg_color),
-                        row(power_plot, current_plot, temp_plot, background=global_var.bg_color),
-                        row(volt_data_table, temp_data_table, background=global_var.bg_color),
-                        background=global_var.bg_color))
+                        row(cpu_plot, user_interface, background=bg_color),
+                        row(mem_plot, mem_plot_hbar, background=bg_color),
+                        row(power_plot, current_plot, temp_plot, background=bg_color),
+                        row(volt_data_table, temp_data_table, background=bg_color),
+                        background=bg_color))
 
 
 # Add a periodic callback to be run every 1000 milliseconds
@@ -416,7 +418,7 @@ callback = curdoc().add_periodic_callback(update, interval * 1000)
 
 
 title2 = Div(
-    text="""<h1 style="color :""" + global_var.text_color + """; text-align :center">Kria&trade; SOM: Application Cockpit</h1>""",
+    text="""<h1 style="color :""" + text_color + """; text-align :center">Kria&trade; SOM: Application Cockpit</h1>""",
     width=500)
 
 
@@ -453,7 +455,7 @@ def xmutil_loadapp(app_name):
 # print("list app output", listapp_output.stdout)
 load_buttons = []
 active_app_print = Div(
-    text="""<h2 style="color :""" + global_var.text_color + """; text-align :center">Active Accelerator: None</h2>""",
+    text="""<h2 style="color :""" + text_color + """; text-align :center">Active Accelerator: None</h2>""",
     width=600)
 active_app = "None"
 
@@ -480,7 +482,7 @@ def draw_apps():
                 active_app = x[0]
 
     active_app_print = Div(
-        text="""<h2 style="color :""" + global_var.text_color + """; text-align :center">Active Accelerator: """ + active_app + """</h2>""",
+        text="""<h2 style="color :""" + text_color + """; text-align :center">Active Accelerator: """ + active_app + """</h2>""",
         width=600)
 
     for i in range(len(apps)):
@@ -498,8 +500,8 @@ def draw_apps():
 
 
 app_print = Div(
-    text="""<h2 style="color :""" + global_var.text_color + """; text-align :left">Available Accelerated applications on 
-     target to load</h2><h4 style="color :""" + global_var.text_color + """; text-align :left">&emsp;&emsp;Blue - click 
+    text="""<h2 style="color :""" + text_color + """; text-align :left">Available Accelerated applications on 
+     target to load</h2><h4 style="color :""" + text_color + """; text-align :left">&emsp;&emsp;Blue - click 
     to load, Green - Loaded Accelerator, White - available to load after unloading</h4>""", width=1600)
 draw_apps()
 current_command = None
@@ -548,7 +550,7 @@ def run_app(run_command):
 # packages!!###########################################################################################################
 
 package_print = Div(
-    text="""<h2 style="color :""" + global_var.text_color + """; text-align :center">Available Accelerated Application 
+    text="""<h2 style="color :""" + text_color + """; text-align :center">Available Accelerated Application 
     Packages, click to download and DNF install</h2>""", width=1600)
 
 
@@ -585,7 +587,7 @@ draw_pkgs()
 
 
 app_print2 = Div(
-    text="""<h3 style="color :""" + global_var.text_color + """; text-align :center">To execute application, use command 
+    text="""<h3 style="color :""" + text_color + """; text-align :center">To execute application, use command 
     line or start Jupyter lab and use notebooks. </h3>""", width=1600)
 
 
@@ -600,7 +602,7 @@ layout2 = layout([
     column(pkgs_buttons, margin=(0, 0, 0, 50)),  # 6
     row(app_print2, margin=(100, 0, 400, 0))
 ])
-layout2.background = global_var.bg_color
+layout2.background = bg_color
 
 
 
