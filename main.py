@@ -128,7 +128,7 @@ power_data = deque([0] * sample_size)
 
 # title
 title1 = Div(
-    text="""<h1 style="color :""" + global_var.text_color + """; text-align :center">Kria Zynq MPSoc Platform Statistic</h1>""",
+    text="""<h1 style="color :""" + global_var.text_color + """; text-align :center">Kria&trade; SOM: Hardware Platform Statistics</h1>""",
     width=450)
 
 # average cpu display
@@ -416,7 +416,7 @@ callback = curdoc().add_periodic_callback(update, interval * 1000)
 
 
 title2 = Div(
-    text="""<h1 style="color :""" + global_var.text_color + """; text-align :center">Kria Zynq MPSoc Application Cockpit</h1>""",
+    text="""<h1 style="color :""" + global_var.text_color + """; text-align :center">Kria&trade; SOM: Application Cockpit</h1>""",
     width=500)
 
 
