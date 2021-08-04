@@ -159,7 +159,7 @@ power_ds = (power_plot.line(x, power_data, line_width=2,
 power_plot.legend.click_policy = "hide"
 
 # temperature line plot
-temp_plot = figure(plot_width=500, plot_height=300, title='Temperature in C')
+temp_plot = figure(plot_width=500, plot_height=300, title='Temperature in Celsius')
 temp_ds = [0, 0, 0, 0]
 temp_ds[0] = (temp_plot.line(x, temp_data[temp_labels[0]], line_width=2,
                              color=color_list[0], legend_label=temp_labels[0])).data_source
@@ -319,7 +319,7 @@ def update(step):
 
     text = """<h2 style="color :""" + text_color + """;">""" + \
            "&nbsp; &nbsp; Average CPU utilization over last " + str(average_cpu_sample_size) + \
-           " sample is " + str(round(average_cpu, 2)) + """%</h2>"""
+           " samples is " + str(round(average_cpu, 2)) + """%</h2>"""
     average_cpu_display.text = text
     # average_cpu_gauge.name = "Average CPU utilization over last " + str(average_cpu_sample_size)
     # average_cpu_gauge.value = str(round(average_cpu, 2))
@@ -551,7 +551,7 @@ def run_app(run_command):
 
 package_print = Div(
     text="""<h2 style="color :""" + text_color + """; text-align :center">Available Accelerated Application 
-    Packages, click to download and DNF install</h2>""", width=1600)
+    Packages, click button below to download and DNF install the chosen package</h2>""", width=1600)
 
 
 def dnf_install(app_name):
@@ -588,7 +588,7 @@ draw_pkgs()
 
 app_print2 = Div(
     text="""<h3 style="color :""" + text_color + """; text-align :center">To execute application, use command 
-    line or start Jupyter lab and use notebooks. </h3>""", width=1600)
+    line or start Jupyter lab and use Jupyter notebooks. </h3>""", width=1600)
 
 
 layout2 = layout([
