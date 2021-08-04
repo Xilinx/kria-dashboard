@@ -1,4 +1,4 @@
-# som_dashboard
+# SOM Dashboard
 This repository contains source code for a SOM dashboard. It is implemented using bokeh.
 
 To install Bokeh on 2020.2: 
@@ -26,8 +26,8 @@ in a browser go to the following url:
     
 
 Current view:
-![Alt text](screenshot.PNG?raw=true "Title")
-
+![Alt text](snapshot1.PNG?raw=true "Title")
+![Alt text](snapshot2.PNG?raw=true "Title")
 
 # License
 Licensed under the Apache License, Version 2.0 (the “License”); you may not use this file except in compliance with the License.
