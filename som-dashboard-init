@@ -60,6 +60,7 @@ start ()
       DAEMON_ARGS=" serve --show --allow-websocket-origin=$ip:5006 $python_path/som-dashboard/"
       echo "start-stop-daemon -S -m -p $PIDFILE -x $DAEMON -- $DAEMON_ARGS"
       start-stop-daemon -S -m -p $PIDFILE -x $DAEMON -- $DAEMON_ARGS&
+      echo " SOM Dashboard will be running at http://$ip:5006/som-dashboard "
  fi
 }
 stop ()
