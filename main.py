@@ -131,7 +131,7 @@ power_data = deque([0] * sample_size)
 # title
 title1 = Div(
     text="""<h1 style="color :""" + text_color + """; text-align :center">Kria&trade; SOM: Hardware Platform Statistics</h1>""",
-    width=450)
+    width=550)
 
 # average cpu display
 average_cpu = 0.0
@@ -500,7 +500,7 @@ def draw_apps():
 
 
 app_print = Div(
-    text="""<h2 style="color :""" + text_color + """; text-align :left">Available Accelerated applications on 
+    text="""<h2 style="color :""" + text_color + """; text-align :left">Available Accelerated Applications on 
      target to load</h2><h4 style="color :""" + text_color + """; text-align :left">&emsp;&emsp;Blue - click 
     to load, Green - Loaded Accelerator, White - available to load after unloading</h4>""", width=1600)
 draw_apps()
