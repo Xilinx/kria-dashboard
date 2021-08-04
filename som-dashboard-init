@@ -53,7 +53,7 @@ start ()
  echo " Starting $DAEMON"
  queryip
  querypath
- if [ -z $ip] || [ -z $python_path ]; then
+ if [ -z $ip ] || [ -z $python_path ]; then
      echo " TIMEOUT cant find ip addr or python path"
      exit 1
  else
