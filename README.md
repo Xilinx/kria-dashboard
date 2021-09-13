@@ -13,6 +13,8 @@ To install Bokeh on 2021.1:
     sudo pip3 install panel
     
     
+2021.2 has Bokeh and dashboard installed, and does not require installation. 
+
 to execute, copy all the files onto a directory on SOM platform in a folder (lets say we name it som_dashboard), and then execute outside that directory:
 
   	
