@@ -1,30 +1,21 @@
 # SOM Dashboard
-This repository contains source code for a SOM dashboard. It is implemented using bokeh.
+2021.2 has Bokeh and dashboard installed, and does not require installation. The Bokeh server is also started automatically, URL is printed out before login.
 
-To install Bokeh on 2020.2: 
+To start Bokeh server manually, use one of the following commands:
 
-    
-    sudo pip3 install bokeh==2.1
-    
-    
-To install Bokeh on 2021.1:
+    sudo /etc/init.d/som-dashboard-init start
 
-    
-    sudo pip3 install panel
-    
-    
-2021.2 has Bokeh and dashboard installed, and does not require installation. 
+or
 
-to execute, copy all the files onto a directory on SOM platform in a folder (lets say we name it som_dashboard), and then execute outside that directory:
-
-  	
-    sudo bokeh serve --show --allow-websocket-origin=*IP_ADDRESS*:5006 som_dashboard/
+    sudo bokeh serve --show --allow-websocket-origin=*IP_ADDRESS*:5006 /usr/lib/python3.8/site-packages/som-dashboard
     
 
 in a browser go to the following url:
 
     
-    http://*IP_ADDRESS*:5006/som_dashboard
+    http://*IP_ADDRESS*:5006/som-dashboard
+    
+
     
 
 Current view:
