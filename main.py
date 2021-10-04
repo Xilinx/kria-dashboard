@@ -138,6 +138,12 @@ average_cpu = 0.0
 average_cpu_sample_size = 0
 average_cpu_display = Div(text=str(average_cpu), width=600)
 
+# CPU frequency display
+cpu_freq_text = """<h3 style="color :""" + text_color + """;">CPU Frequencies </h3>"""
+cpu_freq = [0, 0, 0, 0]
+cpu_freq_display = Div(text=cpu_freq_text, width=400)
+
+
 # CPU line plot
 cpu_plot = figure(plot_width=800, plot_height=300, title='CPU Utilization %')
 cpu_ds = [0, 0, 0, 0]
@@ -321,8 +327,16 @@ def update(step):
            "&nbsp; &nbsp; Average CPU utilization over last " + str(average_cpu_sample_size) + \
            " samples is " + str(round(average_cpu, 2)) + """%</h2>"""
     average_cpu_display.text = text
-    # average_cpu_gauge.name = "Average CPU utilization over last " + str(average_cpu_sample_size)
-    # average_cpu_gauge.value = str(round(average_cpu, 2))
+
+    # CPU frequency
+    cpu_freq = []
+    for j in range(4):
+        cpu_freq.append(open('/sys/devices/system/cpu/cpu' + str(j) + '/cpufreq/cpuinfo_cur_freq', 'r').read())
+
+    cpu_freq_display.text = cpu_freq_text + """<p style="color :""" + text_color + """;">&nbsp; &nbsp;CPU0:""" + cpu_freq[0] + \
+                        "MHz<br>&nbsp; &nbsp;CPU1:" + cpu_freq[1] + \
+                        "MHz<br>&nbsp; &nbsp;CPU2:" + cpu_freq[2] + \
+                        "MHz<br>&nbsp; &nbsp;CPU3:" + cpu_freq[3] + "MHz"
 
     volts = []
     for j in range(len(volt_labels) - 1):
@@ -397,9 +411,12 @@ def update(step):
 user_interface = column(reset_button, input_sample_size, input_interval, #checkbox_group,
                         background=bg_color,
                         margin=(50, 50, 50, 100))
+cpu_freq_block = column(cpu_freq_display,
+                        background=bg_color,
+                        margin=(0, 0, 0, 100))
 layout1 = layout(column(row(title1, align='center'),
                         average_cpu_display,
-                        row(cpu_plot, user_interface, background=bg_color),
+                        row(cpu_plot, user_interface, cpu_freq_block, background=bg_color),
                         row(mem_plot, mem_plot_hbar, background=bg_color),
                         row(power_plot, current_plot, temp_plot, background=bg_color),
                         row(volt_data_table, temp_data_table, background=bg_color),
