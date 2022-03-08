@@ -3,7 +3,7 @@
 
 To start Bokeh server manually, use one of the following commands:
 
-    sudo /etc/init.d/som-dashboard-init start
+    sudo /etc/init.d/som-dashboard start
 
 or
 
