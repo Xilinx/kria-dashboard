@@ -30,9 +30,13 @@ from collections import deque
 import subprocess
 from functools import partial
 
+import sys
+
+from platformstats import platformstats
+
+
 bg_color = '#15191C'
 text_color = '#E0E0E0'
-
 
 ##################################################
 ##### Platform Stat Tab ##########################
@@ -45,10 +49,6 @@ x = deque([0] * sample_size)
 color_list = ["darkseagreen", "steelblue", "indianred", "chocolate", "mediumpurple", "rosybrown", "gold",
               "mediumaquamarine"]
 
-def get_mem(memtype):
-    mem_val = int(
-        ''.join(filter(str.isdigit, str(subprocess.run(['/bin/grep', memtype, '/proc/meminfo'], capture_output=True)))))
-    return mem_val
 
 def clear_min_max():
     max_volt[:] = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -58,6 +58,7 @@ def clear_min_max():
     global average_cpu, average_cpu_sample_size
     average_cpu = 0
     average_cpu_sample_size = 0
+
 
 cpu_labels = [
     "A-53_Core_0",
@@ -94,13 +95,13 @@ volt_data = {
     "Total_Volt": deque([0] * sample_size),
 }
 temp_labels = [
-    "FPD_TEMP",
     "LPD_TEMP",
+    "FPD_TEMP",
     "PL_TEMP",
 ]
 temp_data = {
-    "FPD_TEMP": deque([0.0] * sample_size),
     "LPD_TEMP": deque([0.0] * sample_size),
+    "FPD_TEMP": deque([0.0] * sample_size),
     "PL_TEMP": deque([0.0] * sample_size),
 }
 
@@ -142,7 +143,6 @@ average_cpu_display = Div(text=str(average_cpu), width=600)
 cpu_freq_text = """<h3 style="color :""" + text_color + """;">CPU Frequencies </h3>"""
 cpu_freq = [0, 0, 0, 0]
 cpu_freq_display = Div(text=cpu_freq_text, width=400)
-
 
 # CPU line plot
 cpu_plot = figure(plot_width=800, plot_height=300, title='CPU Utilization %')
@@ -273,11 +273,12 @@ input_sample_size.on_change('value', update_sample_size)
 
 time = 0
 
-
 # default_data_range = cpu_plot.y_range
 
 cpu_plot.y_range = Range1d(0, 100)
-mem_plot.y_range = Range1d(0, get_mem("MemTotal"))
+
+mem_result1 = platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
+mem_plot.y_range = Range1d(0, mem_result1[1]) #get_mem("MemTotal"))
 power_plot.y_range = Range1d(0, 6)
 current_plot.y_range = Range1d(0, 1000)
 temp_plot.y_range = Range1d(0, 100)
@@ -295,7 +296,6 @@ temp_plot.y_range = Range1d(0, 100)
 # checkbox_labels = ["Enable Dynamic Y-axis Scaling"]
 # checkbox_group = CheckboxGroup(labels=checkbox_labels, active=[], css_classes=['custom_textinput'],)
 # checkbox_group.on_change('active', update_scaling)
-
 
 
 @linear()
@@ -330,19 +330,20 @@ def update(step):
 
     # CPU frequency
     cpu_freq = []
-    for j in range(4):
-        cpu_freq.append(open('/sys/devices/system/cpu/cpu' + str(j) + '/cpufreq/cpuinfo_cur_freq', 'r').read())
 
-    cpu_freq_display.text = cpu_freq_text + """<p style="color :""" + text_color + """;">&nbsp; &nbsp;CPU0:""" + cpu_freq[0] + \
-                        "MHz<br>&nbsp; &nbsp;CPU1:" + cpu_freq[1] + \
-                        "MHz<br>&nbsp; &nbsp;CPU2:" + cpu_freq[2] + \
-                        "MHz<br>&nbsp; &nbsp;CPU3:" + cpu_freq[3] + "MHz"
+    for j in range(4):
+        cpu_freq.append(str(platformstats.get_cpu_frequency(j)[1]))  # //Returns list [return_val, cpu_freq]
+        # cpu_freq.append(open('/sys/devices/system/cpu/cpu' + str(j) + '/cpufreq/cpuinfo_cur_freq', 'r').read())
+
+    cpu_freq_display.text = cpu_freq_text + """<p style="color :""" + text_color + """;">&nbsp; &nbsp;CPU0:""" + \
+                            cpu_freq[0] + \
+                            "MHz<br>&nbsp; &nbsp;CPU1:" + cpu_freq[1] + \
+                            "MHz<br>&nbsp; &nbsp;CPU2:" + cpu_freq[2] + \
+                            "MHz<br>&nbsp; &nbsp;CPU3:" + cpu_freq[3] + "MHz"
 
     volts = []
-    for j in range(len(volt_labels) - 1):
-        volts.append(open('/sys/class/hwmon/hwmon0/in' + str(j + 1) + '_input', 'r').read())
-    volts = [j.replace('\n', '') for j in volts]
-    volts.append(int((open('/sys/class/hwmon/hwmon1/in1_input', 'r').read()).replace('\n', '')))
+    volts = platformstats.get_voltages() # Returns list [return_val, VCC_PSPLL, PL_VCCINT, VOLT_DDRS, VCC_PSINTFP, VCC_PS    _FPD, PS_IO_BANK_500, VCC_PS_GTR, VTT_PS_GTR, total_voltage]
+    volts.pop(0)
 
     for j in range(len(volt_labels)):
         if sample_size_actual >= sample_size:
@@ -355,9 +356,8 @@ def update(step):
             volt_data_table.source.trigger('data', volt_data_table.source, volt_data_table.source)
 
     temperatures = []
-    for j in range(len(temp_labels)):
-        temperatures.append(open('/sys/class/hwmon/hwmon0/temp' + str(j + 1) + '_input', 'r').read())
-    temperatures = [j.replace('\n', '') for j in temperatures]
+    temperatures = platformstats.get_temperatures()  # Returns list [return_val, LPD_TEMP, FPD_TEMP, PL_TEMP]
+    temperatures.pop(0)
     for j in range(len(temp_labels)):
         if sample_size_actual >= sample_size:
             temp_data[temp_labels[j]].popleft()
@@ -369,36 +369,40 @@ def update(step):
             temp_data_table.source.trigger('data', temp_data_table.source, temp_data_table.source)
     temp_ds[0].trigger('data', x, temp_data[temp_labels[0]])
 
-    ina260_current = (open('/sys/class/hwmon/hwmon1/curr1_input', 'r').read()).replace('\n', '')
+    ina260_current = platformstats.get_current()[1]  # Returns list [return_val, total_current
+
     if sample_size_actual >= sample_size:
         current_data.popleft()
     current_data.append(int(ina260_current))
     current_ds.trigger('data', x, current_data)
 
-    ina260_power = int((open('/sys/class/hwmon/hwmon1/power1_input', 'r').read()).replace('\n', '')) / 1000000
+    ina260_power = (platformstats.get_power()[1]/ 1000000)  # Returns list [return_val, total_power]
     if sample_size_actual >= sample_size:
         power_data.popleft()
     power_data.append(ina260_power)
     power_ds.trigger('data', x, power_data)
 
     # Mem line chart
-    mem_num = get_mem("MemFree")
+    mem_result1 = platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
+    mem_result2 = platformstats.get_swap_memory_utilization()  # Returns list [return_val, SwapTotal, SwapFree]
+    mem_result3 = platformstats.get_cma_utilization()  # Returns list [return_val, CmaTotal, CmaFree]
+    mem_num = mem_result1[2] # get_mem("MemFree")
     if sample_size_actual >= sample_size:
         mem_data["MemFree"].popleft()
     mem_data["MemFree"].append(mem_num)
     mem_ds.trigger('data', x, mem_data["MemFree"])
 
     # Memory usage Horizontal bar chart
-    mem_bar_total[0] = get_mem('MemTotal')
-    mem_bar_available[0] = get_mem('MemAvailable')
+    mem_bar_total[0] = mem_result1[1] # get_mem('MemTotal')
+    mem_bar_available[0] = mem_result1[3] # get_mem('MemAvailable')
     mem_bar_used[0] = mem_bar_total[0] - mem_bar_available[0]
     mem_bar_percent[0] = 100 * mem_bar_used[0] / max(mem_bar_total[0], 1)
-    mem_bar_total[1] = get_mem('SwapTotal')
-    mem_bar_available[1] = get_mem('SwapFree')
+    mem_bar_total[1] = mem_result2[1] #get_mem('SwapTotal')
+    mem_bar_available[1] = mem_result2[2] #get_mem('SwapFree')
     mem_bar_used[1] = mem_bar_total[1] - mem_bar_available[1]
     mem_bar_percent[1] = 100 * mem_bar_used[1] / max(mem_bar_total[1], 1)
-    mem_bar_total[2] = get_mem('CmaTotal')
-    mem_bar_available[2] = get_mem('CmaFree')
+    mem_bar_total[2] = mem_result3[1]  # get_mem('CmaTotal')
+    mem_bar_available[2] = mem_result3[2]  # get_mem('CmaFree')
     mem_bar_used[2] = mem_bar_total[2] - mem_bar_available[2]
     mem_bar_percent[2] = 100 * mem_bar_used[2] / max(mem_bar_total[2], 1)
     mem_percent_ds.trigger('data', mem_bar_label, mem_bar_percent)
@@ -408,7 +412,7 @@ def update(step):
 
 
 # margin:  Margin-Top, Margin-Right, Margin-Bottom and Margin-Left
-user_interface = column(reset_button, input_sample_size, input_interval, #checkbox_group,
+user_interface = column(reset_button, input_sample_size, input_interval,  # checkbox_group,
                         background=bg_color,
                         margin=(50, 50, 50, 100))
 cpu_freq_block = column(cpu_freq_display,
@@ -422,16 +426,12 @@ layout1 = layout(column(row(title1, align='center'),
                         row(volt_data_table, temp_data_table, background=bg_color),
                         background=bg_color))
 
-
 # Add a periodic callback to be run every 1000 milliseconds
 callback = curdoc().add_periodic_callback(update, interval * 1000)
-
-
 
 ##################################################
 ##### Application Cockpit Tab ####################
 ##################################################
-
 
 
 title2 = Div(
@@ -444,10 +444,10 @@ def xmutil_unloadapp():
         terminate_app()
     subprocess.run(["sudo", "xmutil", "unloadapp"])
     draw_apps()
-    #draw_app_run_buttons()
+    # draw_app_run_buttons()
     layout2.children[4] = column(load_buttons, margin=(0, 0, 0, 50))
     layout2.children[1] = active_app_print
-    #layout2.children[2] = row(run_buttons)
+    # layout2.children[2] = row(run_buttons)
 
 
 unload_button = Button(label="Unloadapp", width=600, button_type='primary')
@@ -461,10 +461,10 @@ def xmutil_loadapp(app_name):
     command = str('sudo xmutil loadapp ' + app_name)
     subprocess.run(command, shell=True, capture_output=True)
     draw_apps()
-    #draw_app_run_buttons()
+    # draw_app_run_buttons()
     layout2.children[4] = column(load_buttons, margin=(0, 0, 0, 50))
     layout2.children[1] = active_app_print
-    #layout2.children[2] = row(run_buttons)
+    # layout2.children[2] = row(run_buttons)
 
 
 # list out applications - currently listpackage doesnt return stdout correctly, temporarily use a fixed string for dev
@@ -495,7 +495,7 @@ def draw_apps():
         print("\n x is ", x, " i is ", i, "\n")
         if x and x[0] != "Accelerator":
             apps.append(x[0])
-            if x[4] != "-1":
+            if x[5] != "-1":
                 active_app = x[0]
 
     active_app_print = Div(
@@ -602,11 +602,9 @@ def draw_pkgs():
 
 draw_pkgs()
 
-
 app_print2 = Div(
     text="""<h3 style="color :""" + text_color + """; text-align :center">To execute application, use command 
     line or start Jupyter lab and use Jupyter notebooks. </h3>""", width=1600)
-
 
 layout2 = layout([
     row(title2, align='center'),  # 0
@@ -620,9 +618,6 @@ layout2 = layout([
     row(app_print2, margin=(100, 0, 400, 0))
 ])
 layout2.background = bg_color
-
-
-
 
 ##################################################
 ##### Group Tabs        ##########################
