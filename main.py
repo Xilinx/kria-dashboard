@@ -34,7 +34,6 @@ import sys
 
 from platformstats import platformstats
 
-
 bg_color = '#15191C'
 text_color = '#E0E0E0'
 
@@ -278,7 +277,7 @@ time = 0
 cpu_plot.y_range = Range1d(0, 100)
 
 mem_result1 = platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
-mem_plot.y_range = Range1d(0, mem_result1[1]) #get_mem("MemTotal"))
+mem_plot.y_range = Range1d(0, mem_result1[1])  # get_mem("MemTotal"))
 power_plot.y_range = Range1d(0, 6)
 current_plot.y_range = Range1d(0, 1000)
 temp_plot.y_range = Range1d(0, 100)
@@ -342,7 +341,7 @@ def update(step):
                             "MHz<br>&nbsp; &nbsp;CPU3:" + cpu_freq[3] + "MHz"
 
     volts = []
-    volts = platformstats.get_voltages() # Returns list [return_val, VCC_PSPLL, PL_VCCINT, VOLT_DDRS, VCC_PSINTFP, VCC_PS    _FPD, PS_IO_BANK_500, VCC_PS_GTR, VTT_PS_GTR, total_voltage]
+    volts = platformstats.get_voltages()  # Returns list [return_val, VCC_PSPLL, PL_VCCINT, VOLT_DDRS, VCC_PSINTFP, VCC_PS    _FPD, PS_IO_BANK_500, VCC_PS_GTR, VTT_PS_GTR, total_voltage]
     volts.pop(0)
 
     for j in range(len(volt_labels)):
@@ -376,7 +375,7 @@ def update(step):
     current_data.append(int(ina260_current))
     current_ds.trigger('data', x, current_data)
 
-    ina260_power = (platformstats.get_power()[1]/ 1000000)  # Returns list [return_val, total_power]
+    ina260_power = (platformstats.get_power()[1] / 1000000)  # Returns list [return_val, total_power]
     if sample_size_actual >= sample_size:
         power_data.popleft()
     power_data.append(ina260_power)
@@ -386,19 +385,19 @@ def update(step):
     mem_result1 = platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
     mem_result2 = platformstats.get_swap_memory_utilization()  # Returns list [return_val, SwapTotal, SwapFree]
     mem_result3 = platformstats.get_cma_utilization()  # Returns list [return_val, CmaTotal, CmaFree]
-    mem_num = mem_result1[2] # get_mem("MemFree")
+    mem_num = mem_result1[2]  # get_mem("MemFree")
     if sample_size_actual >= sample_size:
         mem_data["MemFree"].popleft()
     mem_data["MemFree"].append(mem_num)
     mem_ds.trigger('data', x, mem_data["MemFree"])
 
     # Memory usage Horizontal bar chart
-    mem_bar_total[0] = mem_result1[1] # get_mem('MemTotal')
-    mem_bar_available[0] = mem_result1[3] # get_mem('MemAvailable')
+    mem_bar_total[0] = mem_result1[1]  # get_mem('MemTotal')
+    mem_bar_available[0] = mem_result1[3]  # get_mem('MemAvailable')
     mem_bar_used[0] = mem_bar_total[0] - mem_bar_available[0]
     mem_bar_percent[0] = 100 * mem_bar_used[0] / max(mem_bar_total[0], 1)
-    mem_bar_total[1] = mem_result2[1] #get_mem('SwapTotal')
-    mem_bar_available[1] = mem_result2[2] #get_mem('SwapFree')
+    mem_bar_total[1] = mem_result2[1]  # get_mem('SwapTotal')
+    mem_bar_available[1] = mem_result2[2]  # get_mem('SwapFree')
     mem_bar_used[1] = mem_bar_total[1] - mem_bar_available[1]
     mem_bar_percent[1] = 100 * mem_bar_used[1] / max(mem_bar_total[1], 1)
     mem_bar_total[2] = mem_result3[1]  # get_mem('CmaTotal')
@@ -433,6 +432,25 @@ callback = curdoc().add_periodic_callback(update, interval * 1000)
 ##### Application Cockpit Tab ####################
 ##################################################
 
+## determine OS and CC
+cc = subprocess.getoutput("sudo xmutil boardid | grep \"product\"")
+if "KR" in cc and "26" in cc:
+    cc = "KR260"
+elif "KV" in cc and "26" in cc:
+    cc = "KV260"
+else:
+    print("ERROR", cc, " is not supported")
+
+print("cc is ", cc)
+
+os = subprocess.getoutput("cat /etc/os-release")
+if "PetaLinux" in os:
+    os = "petalinux"
+elif "Ubuntu" in os:
+    os = "ubuntu"
+else:
+    print("ERROR", os, " is not supported")
+print("os is ", os)
 
 title2 = Div(
     text="""<h1 style="color :""" + text_color + """; text-align :center">Kria&trade; SOM: Application Cockpit</h1>""",
@@ -467,9 +485,6 @@ def xmutil_loadapp(app_name):
     # layout2.children[2] = row(run_buttons)
 
 
-# list out applications - currently listpackage doesnt return stdout correctly, temporarily use a fixed string for dev
-# listapp_output = subprocess.run(['sudo dfx-mgr-client -listPackage | grep kv260'], shell=True, stdout=subprocess.PIPE)
-# print("list app output", listapp_output.stdout)
 load_buttons = []
 active_app_print = Div(
     text="""<h2 style="color :""" + text_color + """; text-align :center">Active Accelerator: None</h2>""",
@@ -568,11 +583,19 @@ def run_app(run_command):
 
 package_print = Div(
     text="""<h2 style="color :""" + text_color + """; text-align :center">Available Accelerated Application 
-    Packages, click button below to download and DNF install the chosen package</h2>""", width=1600)
+    Packages, click button below to download and install the chosen package</h2>""", width=1600)
 
 
 def dnf_install(app_name):
-    command = str('sudo dnf install ' + app_name + " -y")
+    if "ubuntu" in os:
+        command = str('sudo apt install ' + app_name + " -y")
+
+    elif "petalinux" in os:
+        command = str('sudo dnf install ' + app_name + " -y")
+
+    else:
+        print("ERROR: OS is not what we expected", os)
+
     print("execute command: ", command)
     subprocess.call(command, shell=True)
     print("finished command: ", command)
@@ -587,11 +610,17 @@ pkgs_buttons = []
 
 def draw_pkgs():
     global pkgs_buttons
-    # subprocess.run(['sudo dnf update'], shell=True)
-    # subprocess.run(['sudo dnf clean all'], shell=True)
-    getpkgs_output = subprocess.run(['sudo xmutil getpkgs | grep packagegroup-kv260'], shell=True,
+    if "ubuntu" in os:
+        temp_cmd = str("apt-cache search " + cc)
+    elif "petalinux" in os:
+        temp_cmd = str("sudo xmutil getpkgs | grep packagegroup-" + cc)
+
+    else:
+        print("ERROR: OS is not what we expected", os)
+
+    getpkgs_output = subprocess.run([temp_cmd], shell=True,
                                     stdout=subprocess.PIPE).stdout.decode("utf-8")
-    print("getpkgs_output", getpkgs_output)
+    print("getpkgs_output is: ", getpkgs_output)
     list_pkgs = getpkgs_output.split("\n")
     pkgs_buttons = []
     for i in range(len(list_pkgs) - 1):
