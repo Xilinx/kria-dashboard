@@ -25,7 +25,6 @@ from bokeh.events import ButtonClick
 from bokeh.themes import built_in_themes
 from bokeh.driving import linear
 
-import psutil
 from collections import deque
 import subprocess
 from functools import partial
@@ -33,6 +32,8 @@ from functools import partial
 import sys
 
 from platformstats import platformstats
+
+platformstats.init()
 
 bg_color = '#15191C'
 text_color = '#E0E0E0'
@@ -306,7 +307,8 @@ def update(step):
         x.popleft()
     x.append(time)
 
-    read = psutil.cpu_percent(percpu=True)
+    read = platformstats.get_cpu_utilization()
+
     average_cpu_x = 0
     for j in range(len(cpu_labels)):
         if sample_size_actual >= sample_size:
@@ -439,9 +441,9 @@ if "KR" in cc and "26" in cc:
 elif "KV" in cc and "26" in cc:
     cc = "KV260"
 else:
+    platformstats.deinit()
     print("ERROR", cc, " is not supported")
-
-print("cc is ", cc)
+    exit()
 
 os = subprocess.getoutput("cat /etc/os-release")
 if "PetaLinux" in os:
@@ -449,8 +451,10 @@ if "PetaLinux" in os:
 elif "Ubuntu" in os:
     os = "ubuntu"
 else:
+    platformstats.deinit()
     print("ERROR", os, " is not supported")
-print("os is ", os)
+    exit()
+
 
 title2 = Div(
     text="""<h1 style="color :""" + text_color + """; text-align :center">Kria&trade; SOM: Application Cockpit</h1>""",
@@ -475,7 +479,9 @@ unload_button.on_click(xmutil_unloadapp)
 # Apps!!!!!###########################################################################################################
 def xmutil_loadapp(app_name):
     if current_command:
-        print("\nError: unexpected command:", current_command, "\n")
+        platformstats.deinit()
+        print("\nERROR: unexpected command:", current_command, "\n")
+        exit()
     command = str('sudo xmutil loadapp ' + app_name)
     subprocess.run(command, shell=True, capture_output=True)
     draw_apps()
@@ -501,13 +507,11 @@ def draw_apps():
     listapp_output = subprocess.run(['sudo dfx-mgr-client -listPackage'], shell=True,
                                     stdout=subprocess.PIPE).stdout.decode("utf-8")
 
-    print("\n", listapp_output, "\n")
     listapp = listapp_output.split("\n")
     apps = []
     load_buttons = []
     for i in range(len(listapp) - 1):
         x = listapp[i].split()
-        print("\n x is ", x, " i is ", i, "\n")
         if x and x[0] != "Accelerator":
             apps.append(x[0])
             if x[5] != "-1":
@@ -594,11 +598,11 @@ def dnf_install(app_name):
         command = str('sudo dnf install ' + app_name + " -y")
 
     else:
+        platformstats.deinit()
         print("ERROR: OS is not what we expected", os)
+        exit()
 
-    print("execute command: ", command)
     subprocess.call(command, shell=True)
-    print("finished command: ", command)
     draw_pkgs()
     layout2.children[6] = column(pkgs_buttons, margin=(0, 0, 0, 50))
     draw_apps()
@@ -616,11 +620,12 @@ def draw_pkgs():
         temp_cmd = str("sudo xmutil getpkgs | grep packagegroup-" + cc)
 
     else:
+        platformstats.deinit()
         print("ERROR: OS is not what we expected", os)
+        exit()
 
     getpkgs_output = subprocess.run([temp_cmd], shell=True,
                                     stdout=subprocess.PIPE).stdout.decode("utf-8")
-    print("getpkgs_output is: ", getpkgs_output)
     list_pkgs = getpkgs_output.split("\n")
     pkgs_buttons = []
     for i in range(len(list_pkgs) - 1):
@@ -657,3 +662,4 @@ tab1 = Panel(child=layout1, title="Platform Statistic Dashboard")
 tab2 = Panel(child=layout2, title="Application Cockpit")
 tabs = Tabs(tabs=[tab1, tab2])
 curdoc().add_root(tabs)
+
