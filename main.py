@@ -434,8 +434,11 @@ callback = curdoc().add_periodic_callback(update, interval * 1000)
 ##### Application Cockpit Tab ####################
 ##################################################
 
+xlnxcnf_ver = subprocess.getoutput("snap info xlnx-config 2>/dev/null | sed -n \"s/^installed: *\([^ ]\+\).*/\1/p\"")
+xmutil = "xmutil" if xlnxcnf_ver == "" else "xlnx-config.xmutil"
+
 ## determine OS and CC
-cc = subprocess.getoutput("sudo xmutil boardid | grep \"product\"")
+cc = subprocess.getoutput("sudo " + xmutil + " boardid | grep \"product\"")
 if "KR" in cc and "26" in cc:
     cc = "KR260"
 elif "KV" in cc and "26" in cc:
@@ -464,7 +467,7 @@ title2 = Div(
 def xmutil_unloadapp():
     if current_command:
         terminate_app()
-    subprocess.run(["sudo", "xmutil", "unloadapp"])
+    subprocess.run(["sudo", xmutil, "unloadapp"])
     draw_apps()
     # draw_app_run_buttons()
     layout2.children[4] = column(load_buttons, margin=(0, 0, 0, 50))
@@ -482,7 +485,7 @@ def xmutil_loadapp(app_name):
         platformstats.deinit()
         print("\nERROR: unexpected command:", current_command, "\n")
         exit()
-    command = str('sudo xmutil loadapp ' + app_name)
+    command = str('sudo ' + xmutil + ' loadapp ' + app_name)
     subprocess.run(command, shell=True, capture_output=True)
     draw_apps()
     # draw_app_run_buttons()
@@ -617,7 +620,7 @@ def draw_pkgs():
     if "ubuntu" in os:
         temp_cmd = str("apt-cache search " + cc)
     elif "petalinux" in os:
-        temp_cmd = str("sudo xmutil getpkgs | grep packagegroup-" + cc)
+        temp_cmd = str("sudo " + xmutil + " getpkgs | grep packagegroup-" + cc)
 
     else:
         platformstats.deinit()
