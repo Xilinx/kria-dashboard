@@ -434,235 +434,154 @@ callback = curdoc().add_periodic_callback(update, interval * 1000)
 ##### Application Cockpit Tab ####################
 ##################################################
 
-xlnxcnf_ver = subprocess.getoutput("snap info xlnx-config 2>/dev/null | sed -n \"s/^installed: *\([^ ]\+\).*/\1/p\"")
-xmutil = "xmutil" if xlnxcnf_ver == "" else "xlnx-config.xmutil"
+def app_cockpit_view():
+    apps = list_apps()
+    active = next(filter(lambda x: x['Active_slot'] != '-1', apps), None)
+    unload_btn = Button(label='Unloadapp', width=300, button_type='primary', disabled=active == None)
+    unload_btn.on_click(unload_app)
+    load_btns = [Button(label=x['Accelerator'], width=300, button_type='success', disabled=active != None) for x in apps if apps != active]
+    for x in load_btns: x.on_click(partial(load_app, app_name=x.label))
+    return [column(
+            Div(text='<h1>Kria&trade; SOM: Application Cockpit</h1>', width=640),
+            Div(text=f'<h2>Active Accelerator: {active["Accelerator"] if active != None else "None"}</h2>', sizing_mode='stretch_both'),
+            column(unload_btn, margin=(0, 0, 0, 50)),
+            Div(text='<h2>Loadable Accelerators:</h2>' + ('<p>\u2757 Unload the active accelerator first.</p>' if active else ''), sizing_mode='stretch_both'),
+            column(load_btns, margin=(0, 0, 0, 50)),
+            Paragraph(text='To execute Accelerated Applications, use command line or start Jupyter lab and use Jupyter notebooks.', margin=(20, 0, 0, 20)),
+        )]
+
+xlnx_config_version = subprocess.getoutput('snap info xlnx-config 2>/dev/null | sed -n "s/^installed: *\([^ ]\+\).*/\1/p"')
+xlnx_config_prefix = "xlnx-config." if xlnx_config_version != "" else ""
+current_command = None
+
+def list_apps():
+    global xlnx_config_prefix
+    # Note: The order of the output columns of `dfx-mgr-client -listPackage` depends on the version.
+    ls = [l.split() for l in subprocess.run(
+            f'sudo {xlnx_config_prefix}dfx-mgr-client -listPackage', shell=True, stdout=subprocess.PIPE
+        ).stdout.decode('utf-8').split("\n") if l]
+    return [dict(zip(ls[0], l)) for l in ls[1:]]
+
+def terminate_command():
+    global current_command
+    current_command.terminate()
+    current_command = None
+
+def unload_app():
+    global current_command, xlnx_config_prefix
+    if current_command:
+        terminate_command()
+    subprocess.run(f'sudo {xlnx_config_prefix}xmutil unloadapp', shell=True)
+    curdoc().add_next_tick_callback(update_app_cockpit)
+
+def load_app(app_name):
+    global current_command, xlnx_config_prefix
+    if current_command:
+        platformstats.deinit()
+        print(f'\nERROR: unexpected command:{current_command}\n')
+        exit()
+    subprocess.run(f'sudo {xlnx_config_prefix}xmutil loadapp {app_name}', shell=True)
+    curdoc().add_next_tick_callback(update_app_cockpit)
+
+##################################################
+##### Group Tabs        ##########################
+##################################################
+tab1 = Panel(child=layout1, title="Platform Statistic Dashboard")
+tab2 = Panel(child=layout(children=app_cockpit_view(), background=bg_color), title="Application Cockpit")
+curdoc().theme = 'dark_minimal'
+curdoc().add_root(Tabs(tabs=[tab1, tab2]))
+
+def update_app_cockpit():
+    global tab2
+    tab2.child.children = layout(children=app_cockpit_view()).children
+
+"""
+# Accelerated Applications installations should be excluded from this tool.
+# Because there is no unified installation procedure for the Ubuntu snap package.
+#
+# ex.1)
+# $ xlnx-config --snap -q
+# $ `yes | sudo xlnx-config --snap --install xlnx-nlp-smartvision`
+#
+# ex.2)
+# $ sudo snap install xlnx-vai-lib-samples
+# $ sudo snap connect xlnx-vai-lib-samples:assets xlnx-config:assets
+
+def install_app(package_name):
+    global os
+    if xlnx_config_prefix != "":
+        command = f'yes | sudo xlnx-config --snap --install {package_name}'
+    if os == "Ubuntu":
+        command = f'sudo apt install {package_name} -y'
+    else:
+        assert os == "Petalinux"
+        command = f'sudo dnf install {package_name} -y'
+    subprocess.call(command, shell=True)
+    curdoc().add_next_tick_callback(update_app_cockpit)
 
 ## determine OS and CC
-cc = subprocess.getoutput("sudo " + xmutil + " boardid | grep \"product\"")
+cc = subprocess.getoutput(f'sudo {xlnx_config_prefix}xmutil boardid | grep "product"')
 if "KR" in cc and "26" in cc:
     cc = "KR260"
 elif "KV" in cc and "26" in cc:
     cc = "KV260"
 else:
     platformstats.deinit()
-    print("ERROR", cc, " is not supported")
+    print(f'ERROR {cc} is not supported')
     exit()
 
-os = subprocess.getoutput("cat /etc/os-release")
-if "PetaLinux" in os:
-    os = "petalinux"
-elif "Ubuntu" in os:
-    os = "ubuntu"
-else:
+os = subprocess.getoutput("sed -nE '0,/.*(PetaLinux|Ubuntu).*/{s//\1/p}' /etc/os-release 2>/dev/null")
+if os == "":
     platformstats.deinit()
-    print("ERROR", os, " is not supported")
+    print(f'ERROR {os} is not supported')
     exit()
 
-
-title2 = Div(
-    text="""<h1 style="color :""" + text_color + """; text-align :center">Kria&trade; SOM: Application Cockpit</h1>""",
-    width=500)
-
-
-def xmutil_unloadapp():
-    if current_command:
-        terminate_app()
-    subprocess.run(["sudo", xmutil, "unloadapp"])
-    draw_apps()
-    # draw_app_run_buttons()
-    layout2.children[4] = column(load_buttons, margin=(0, 0, 0, 50))
-    layout2.children[1] = active_app_print
-    # layout2.children[2] = row(run_buttons)
-
-
-unload_button = Button(label="Unloadapp", width=600, button_type='primary')
-unload_button.on_click(xmutil_unloadapp)
-
-
-# Apps!!!!!###########################################################################################################
-def xmutil_loadapp(app_name):
-    if current_command:
-        platformstats.deinit()
-        print("\nERROR: unexpected command:", current_command, "\n")
-        exit()
-    command = str('sudo ' + xmutil + ' loadapp ' + app_name)
-    subprocess.run(command, shell=True, capture_output=True)
-    draw_apps()
-    # draw_app_run_buttons()
-    layout2.children[4] = column(load_buttons, margin=(0, 0, 0, 50))
-    layout2.children[1] = active_app_print
-    # layout2.children[2] = row(run_buttons)
-
-
-load_buttons = []
-active_app_print = Div(
-    text="""<h2 style="color :""" + text_color + """; text-align :center">Active Accelerator: None</h2>""",
-    width=600)
-active_app = "None"
-
-
-def draw_apps():
-    global load_buttons
-    global active_app_print
-    global active_app
-    active_app = "None"
-
-    listapp_output = subprocess.run(['sudo dfx-mgr-client -listPackage'], shell=True,
-                                    stdout=subprocess.PIPE).stdout.decode("utf-8")
-
-    listapp = listapp_output.split("\n")
-    apps = []
-    load_buttons = []
-    for i in range(len(listapp) - 1):
-        x = listapp[i].split()
-        if x and x[0] != "Accelerator":
-            apps.append(x[0])
-            if x[5] != "-1":
-                active_app = x[0]
-
-    active_app_print = Div(
-        text="""<h2 style="color :""" + text_color + """; text-align :center">Active Accelerator: """ + active_app + """</h2>""",
-        width=600)
-
-    for i in range(len(apps)):
-        load_buttons.append(Button(label=apps[i], width=300, button_type='primary'))
-        if active_app != "None":
-            if apps[i] == active_app:
-                load_buttons[i].button_type = 'success'
-                load_buttons[i].js_on_click(
-                    CustomJS(code='alert("This Accelerator is already loaded, Unloadapp first!");'))
-            else:
-                load_buttons[i].button_type = 'default'
-                load_buttons[i].js_on_click(CustomJS(code='alert("Unloadapp First!");'))
-        else:
-            load_buttons[i].on_click(partial(xmutil_loadapp, app_name=apps[i]))
-
-
-app_print = Div(
-    text="""<h2 style="color :""" + text_color + """; text-align :left">Available Accelerated Applications on 
-     target to load</h2><h4 style="color :""" + text_color + """; text-align :left">&emsp;&emsp;Blue - click 
-    to load, Green - Loaded Accelerator, White - available to load after unloading</h4>""", width=1600)
-draw_apps()
-current_command = None
-
-
-def terminate_app():
-    global current_command
-    current_command.terminate()
-    current_command = None
-
-
-def run_app(run_command):
-    global current_command
-    if current_command:
-        terminate_app()
-    print("run_command:", run_command, "\n\n")
-    current_command = subprocess.Popen(run_command, shell=True)
-    print("\n\ncurrent command: ", current_command, "\n\n")
-
-
-# run_buttons = []
-#
-#
-# def draw_app_run_buttons():
-#     global run_buttons
-#     global active_app
-#     run_buttons = []
-#     if active_app == "None":
-#         return
-#     less_cmd = 'less som_dashboard/commands/' + active_app + '_cmds.txt'
-#     print(less_cmd)
-#     less_return = subprocess.run(less_cmd, shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-#     run_commands_txt = less_return.stdout.decode("utf-8")
-#     if "No such file" in run_commands_txt:
-#         return
-#     run_commands = run_commands_txt.split('\n')
-#     for commands in run_commands:
-#         x = commands.split(',')
-#         button = Button(label=x[0], width=300, button_type='primary')
-#         button.on_click(partial(run_app, run_command=x[1]))
-#         run_buttons.append(button)
-#
-#
-# draw_app_run_buttons()
-
-# packages!!###########################################################################################################
-
-package_print = Div(
-    text="""<h2 style="color :""" + text_color + """; text-align :center">Available Accelerated Application 
-    Packages, click button below to download and install the chosen package</h2>""", width=1600)
-
-
-def dnf_install(app_name):
-    if "ubuntu" in os:
-        command = str('sudo apt install ' + app_name + " -y")
-
-    elif "petalinux" in os:
-        command = str('sudo dnf install ' + app_name + " -y")
-
+# @app_cockpit_view() not refactored
+    pkgs_buttons = []
+    if os == "Ubuntu" and xlnx_config_prefix == "":
+        temp_cmd = str(f"apt-cache search {cc}")
     else:
-        platformstats.deinit()
-        print("ERROR: OS is not what we expected", os)
-        exit()
-
-    subprocess.call(command, shell=True)
-    draw_pkgs()
-    layout2.children[6] = column(pkgs_buttons, margin=(0, 0, 0, 50))
-    draw_apps()
-    layout2.children[4] = column(load_buttons, margin=(0, 0, 0, 50))
-
-
-pkgs_buttons = []
-
-
-def draw_pkgs():
-    global pkgs_buttons
-    if "ubuntu" in os:
-        temp_cmd = str("apt-cache search " + cc)
-    elif "petalinux" in os:
-        temp_cmd = str("sudo " + xmutil + " getpkgs | grep packagegroup-" + cc)
-
-    else:
-        platformstats.deinit()
-        print("ERROR: OS is not what we expected", os)
-        exit()
-
-    getpkgs_output = subprocess.run([temp_cmd], shell=True,
-                                    stdout=subprocess.PIPE).stdout.decode("utf-8")
+        assert os == "Petalinux"
+        temp_cmd = str(f"sudo xmutil getpkgs | grep packagegroup-{cc}")
+    getpkgs_output = subprocess.run([temp_cmd], shell=True, stdout=subprocess.PIPE).stdout.decode("utf-8")
     list_pkgs = getpkgs_output.split("\n")
     pkgs_buttons = []
     for i in range(len(list_pkgs) - 1):
         x = list_pkgs[i].split()
         pkgs_buttons.append(Button(label=x[0], width=300, button_type='primary'))
-        pkgs_buttons[i].on_click(partial(dnf_install, app_name=x[0]))
+        pkgs_buttons[i].on_click(partial(install_package, app_name=x[0]))
+"""
 
+"""
+# To execute application, use command line or start Jupyter lab and use Jupyter notebooks.
+def run_app(run_command):
+    global current_command
+    if current_command:
+        terminate_command()
+    print(f"run_command:{run_command}\n\n")
+    current_command = subprocess.Popen(run_command, shell=True)
+    print("\n\ncurrent command: ", current_command, "\n\n")
 
-draw_pkgs()
+run_buttons = []
 
-app_print2 = Div(
-    text="""<h3 style="color :""" + text_color + """; text-align :center">To execute application, use command 
-    line or start Jupyter lab and use Jupyter notebooks. </h3>""", width=1600)
+def draw_app_run_buttons():
+    global run_buttons
+    global active_app
+    run_buttons = []
+    if active_app == "None":
+        return
+    less_cmd = 'less som_dashboard/commands/' + active_app + '_cmds.txt'
+    print(less_cmd)
+    less_return = subprocess.run(less_cmd, shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    run_commands_txt = less_return.stdout.decode("utf-8")
+    if "No such file" in run_commands_txt:
+        return
+    run_commands = run_commands_txt.split('\n')
+    for commands in run_commands:
+        x = commands.split(',')
+        button = Button(label=x[0], width=300, button_type='primary')
+        button.on_click(partial(run_app, run_command=x[1]))
+        run_buttons.append(button)
 
-layout2 = layout([
-    row(title2, align='center'),  # 0
-    [active_app_print],  # 1
-    # row(run_buttons),  # 2
-    column(unload_button, margin=(0, 0, 0, 50)),  # 2
-    [app_print],  # 3
-    column(load_buttons, margin=(0, 0, 0, 50)),  # 4
-    [package_print],  # 5
-    column(pkgs_buttons, margin=(0, 0, 0, 50)),  # 6
-    row(app_print2, margin=(100, 0, 400, 0))
-])
-layout2.background = bg_color
-
-##################################################
-##### Group Tabs        ##########################
-##################################################
-
-curdoc().theme = 'dark_minimal'
-tab1 = Panel(child=layout1, title="Platform Statistic Dashboard")
-tab2 = Panel(child=layout2, title="Application Cockpit")
-tabs = Tabs(tabs=[tab1, tab2])
-curdoc().add_root(tabs)
-
+draw_app_run_buttons()
+"""

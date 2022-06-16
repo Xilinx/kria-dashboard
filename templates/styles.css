@@ -36,3 +36,8 @@
             background-color: #15191C !important;
             color:#E0E0E0 !important;
 }
+
+div > h1, div > h2, div > h3, div > h4, div > p {
+  background-color: #15191C !important;
+  color:#E0E0E0 !important;
+}
