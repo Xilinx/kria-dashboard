@@ -536,8 +536,11 @@ def draw_apps():
 
 
 app_print = Div(
-    text="""<h2 style="color :""" + text_color + """; text-align :left">Available Accelerated Applications on 
-     target to load</h2><h4 style="color :""" + text_color + """; text-align :left">&emsp;&emsp;Blue - click 
+    text="""<h2 style="color :""" + text_color + """; text-align :left">Available Firmware for Accelerated Applications 
+    on target to load </h2>
+    <h4 style="color :""" + text_color + """; text-align :left">&emsp;&emsp;(Firmware is the programmable logic portion
+    of an Accelerated Application) </h4>
+    <h4 style="color :""" + text_color + """; text-align :left">&emsp;&emsp;Blue - click 
     to load, Green - Loaded Accelerator, White - available to load after unloading</h4>""", width=1600)
 draw_apps()
 current_command = None
@@ -586,8 +589,9 @@ def run_app(run_command):
 # packages!!###########################################################################################################
 
 package_print = Div(
-    text="""<h2 style="color :""" + text_color + """; text-align :center">Available Accelerated Application 
-    Packages, click button below to download and install the chosen package</h2>""", width=1600)
+    text="""<h2 style="color :""" + text_color + """; text-align :center">Available Accelerated Application Packages</h2> 
+    <h4 style="color :""" + text_color + """; text-align :left">&emsp;&emsp;  blue - click to install, 
+    Green - installed application package</h4>""", width=1600)
 
 
 def dnf_install(app_name):
@@ -615,7 +619,7 @@ pkgs_buttons = []
 def draw_pkgs():
     global pkgs_buttons
     if "ubuntu" in os:
-        temp_cmd = str("apt-cache search " + cc)
+        temp_cmd = str("sudo xmutil getpkgs | grep jammy")
     elif "petalinux" in os:
         temp_cmd = str("sudo xmutil getpkgs | grep packagegroup-" + cc)
 
@@ -630,8 +634,15 @@ def draw_pkgs():
     pkgs_buttons = []
     for i in range(len(list_pkgs) - 1):
         x = list_pkgs[i].split()
-        pkgs_buttons.append(Button(label=x[0], width=300, button_type='primary'))
-        pkgs_buttons[i].on_click(partial(dnf_install, app_name=x[0]))
+        x = x[0].split("/")
+        if "installed" in list_pkgs[i]:
+            pkgs_buttons.append(Button(label=x[0], width=300, button_type='success'))
+            pkgs_buttons[i].js_on_click(
+                CustomJS(code='alert("This Application has been installed");'))
+        else:
+            pkgs_buttons.append(Button(label=x[0], width=300, button_type='primary'))
+            pkgs_buttons[i].on_click(partial(dnf_install, app_name=x[0]))
+
 
 
 draw_pkgs()
