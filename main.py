@@ -31,9 +31,9 @@ from functools import partial
 
 import sys
 
-from platformstats import platformstats
+from xlnx_platformstats import xlnx_platformstats
 
-platformstats.init()
+xlnx_platformstats.init()
 
 bg_color = '#15191C'
 text_color = '#E0E0E0'
@@ -277,7 +277,7 @@ time = 0
 
 cpu_plot.y_range = Range1d(0, 100)
 
-mem_result1 = platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
+mem_result1 = xlnx_platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
 mem_plot.y_range = Range1d(0, mem_result1[1])  # get_mem("MemTotal"))
 power_plot.y_range = Range1d(0, 6)
 current_plot.y_range = Range1d(0, 1000)
@@ -307,7 +307,7 @@ def update(step):
         x.popleft()
     x.append(time)
 
-    read = platformstats.get_cpu_utilization()
+    read = xlnx_platformstats.get_cpu_utilization()
 
     average_cpu_x = 0
     for j in range(len(cpu_labels)):
@@ -333,7 +333,7 @@ def update(step):
     cpu_freq = []
 
     for j in range(4):
-        cpu_freq.append(str(platformstats.get_cpu_frequency(j)[1]))  # //Returns list [return_val, cpu_freq]
+        cpu_freq.append(str(xlnx_platformstats.get_cpu_frequency(j)[1]))  # //Returns list [return_val, cpu_freq]
         # cpu_freq.append(open('/sys/devices/system/cpu/cpu' + str(j) + '/cpufreq/cpuinfo_cur_freq', 'r').read())
 
     cpu_freq_display.text = cpu_freq_text + """<p style="color :""" + text_color + """;">&nbsp; &nbsp;CPU0:""" + \
@@ -343,7 +343,7 @@ def update(step):
                             "MHz<br>&nbsp; &nbsp;CPU3:" + cpu_freq[3] + "MHz"
 
     volts = []
-    volts = platformstats.get_voltages()  # Returns list [return_val, VCC_PSPLL, PL_VCCINT, VOLT_DDRS, VCC_PSINTFP, VCC_PS    _FPD, PS_IO_BANK_500, VCC_PS_GTR, VTT_PS_GTR, total_voltage]
+    volts = xlnx_platformstats.get_voltages()  # Returns list [return_val, VCC_PSPLL, PL_VCCINT, VOLT_DDRS, VCC_PSINTFP, VCC_PS    _FPD, PS_IO_BANK_500, VCC_PS_GTR, VTT_PS_GTR, total_voltage]
     volts.pop(0)
 
     for j in range(len(volt_labels)):
@@ -357,7 +357,7 @@ def update(step):
             volt_data_table.source.trigger('data', volt_data_table.source, volt_data_table.source)
 
     temperatures = []
-    temperatures = platformstats.get_temperatures()  # Returns list [return_val, LPD_TEMP, FPD_TEMP, PL_TEMP]
+    temperatures = xlnx_platformstats.get_temperatures()  # Returns list [return_val, LPD_TEMP, FPD_TEMP, PL_TEMP]
     temperatures.pop(0)
     for j in range(len(temp_labels)):
         if sample_size_actual >= sample_size:
@@ -370,23 +370,23 @@ def update(step):
             temp_data_table.source.trigger('data', temp_data_table.source, temp_data_table.source)
     temp_ds[0].trigger('data', x, temp_data[temp_labels[0]])
 
-    ina260_current = platformstats.get_current()[1]  # Returns list [return_val, total_current
+    ina260_current = xlnx_platformstats.get_current()[1]  # Returns list [return_val, total_current
 
     if sample_size_actual >= sample_size:
         current_data.popleft()
     current_data.append(int(ina260_current))
     current_ds.trigger('data', x, current_data)
 
-    ina260_power = (platformstats.get_power()[1] / 1000000)  # Returns list [return_val, total_power]
+    ina260_power = (xlnx_platformstats.get_power()[1] / 1000000)  # Returns list [return_val, total_power]
     if sample_size_actual >= sample_size:
         power_data.popleft()
     power_data.append(ina260_power)
     power_ds.trigger('data', x, power_data)
 
     # Mem line chart
-    mem_result1 = platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
-    mem_result2 = platformstats.get_swap_memory_utilization()  # Returns list [return_val, SwapTotal, SwapFree]
-    mem_result3 = platformstats.get_cma_utilization()  # Returns list [return_val, CmaTotal, CmaFree]
+    mem_result1 = xlnx_platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
+    mem_result2 = xlnx_platformstats.get_swap_memory_utilization()  # Returns list [return_val, SwapTotal, SwapFree]
+    mem_result3 = xlnx_platformstats.get_cma_utilization()  # Returns list [return_val, CmaTotal, CmaFree]
     mem_num = mem_result1[2]  # get_mem("MemFree")
     if sample_size_actual >= sample_size:
         mem_data["MemFree"].popleft()
@@ -441,7 +441,7 @@ if "KR" in cc and "26" in cc:
 elif "KV" in cc and "26" in cc:
     cc = "KV260"
 else:
-    platformstats.deinit()
+    xlnx_platformstats.deinit()
     print("ERROR", cc, " is not supported")
     exit()
 
@@ -451,7 +451,7 @@ if "PetaLinux" in os:
 elif "Ubuntu" in os:
     os = "ubuntu"
 else:
-    platformstats.deinit()
+    xlnx_platformstats.deinit()
     print("ERROR", os, " is not supported")
     exit()
 
@@ -479,7 +479,7 @@ unload_button.on_click(xmutil_unloadapp)
 # Apps!!!!!###########################################################################################################
 def xmutil_loadapp(app_name):
     if current_command:
-        platformstats.deinit()
+        xlnx_platformstats.deinit()
         print("\nERROR: unexpected command:", current_command, "\n")
         exit()
     command = str('sudo xmutil loadapp ' + app_name)
@@ -560,32 +560,6 @@ def run_app(run_command):
     current_command = subprocess.Popen(run_command, shell=True)
     print("\n\ncurrent command: ", current_command, "\n\n")
 
-
-# run_buttons = []
-#
-#
-# def draw_app_run_buttons():
-#     global run_buttons
-#     global active_app
-#     run_buttons = []
-#     if active_app == "None":
-#         return
-#     less_cmd = 'less som_dashboard/commands/' + active_app + '_cmds.txt'
-#     print(less_cmd)
-#     less_return = subprocess.run(less_cmd, shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-#     run_commands_txt = less_return.stdout.decode("utf-8")
-#     if "No such file" in run_commands_txt:
-#         return
-#     run_commands = run_commands_txt.split('\n')
-#     for commands in run_commands:
-#         x = commands.split(',')
-#         button = Button(label=x[0], width=300, button_type='primary')
-#         button.on_click(partial(run_app, run_command=x[1]))
-#         run_buttons.append(button)
-#
-#
-# draw_app_run_buttons()
-
 # packages!!###########################################################################################################
 
 package_print = Div(
@@ -602,7 +576,7 @@ def dnf_install(app_name):
         command = str('sudo dnf install ' + app_name + " -y")
 
     else:
-        platformstats.deinit()
+        xlnx_platformstats.deinit()
         print("ERROR: OS is not what we expected", os)
         exit()
 
@@ -624,7 +598,7 @@ def draw_pkgs():
         temp_cmd = str("sudo xmutil getpkgs | grep packagegroup-" + cc)
 
     else:
-        platformstats.deinit()
+        xlnx_platformstats.deinit()
         print("ERROR: OS is not what we expected", os)
         exit()
 
