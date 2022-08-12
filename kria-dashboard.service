@@ -1,0 +1,12 @@
+[Unit]
+Description=kria-dashboard-init
+Requires=network-online.target
+After=network-online.target
+Wants=dfx-mgr.service
+
+[Service]
+ExecStart=/usr/bin/kria-dashboard.sh
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target
