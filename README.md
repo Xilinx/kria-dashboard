@@ -16,7 +16,7 @@ In a browser go to the following url:
 
 Current view:
 ![Alt text](snapshot1.PNG?raw=true "Title")
-![Alt text](snapshot2.PNG?raw=true "Title")
+
 
 # License
 
