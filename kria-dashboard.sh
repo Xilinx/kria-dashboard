@@ -25,7 +25,15 @@
 
 
 ip=$(ip -4 addr show eth0 | grep -oE "inet ([0-9]{1,3}[\.]){3}[0-9]{1,3}" | cut -d ' ' -f2)
-python_path=$(python3 -m site | grep packages |grep usr | head -n 1 | sed 's/,//g' | sed 's/ //g'| sed 's/^.//;s/.$//')
+python_path=($(python3 -m site | grep packages | grep usr | sed 's/,//g' | sed 's/ //g'| sed 's/^.//;s/.$//'))
+
+for ((i=0;i<${#python_path[@]}; i++)); do
+    if [ -d "${python_path[i]}/kria-dashboard" ];
+    then
+        python_path=${python_path[i]}
+        break
+    fi
+done
 
 if [ -z $ip ]; then
      echo "Cant find IP addr, please call /usr/bin/kria-dashboard.sh after assigning IP addr"
@@ -34,4 +42,3 @@ else
     echo "SOM Dashboard will be running at http://$ip:5006/kria-dashboard"
     bokeh serve --show --allow-websocket-origin=$ip:5006 $python_path/kria-dashboard
 fi
-
