@@ -1,4 +1,12 @@
-# SOM Dashboard
+
+<h1 align="center">KRIA SOM DASHBOARD</h1>
+
+## Introduction
+This repository contains the source code of Kria SOM dashboard tool which provides the debugging information of Kria SOM.
+
+
+
+## How to use
 
 2021.2 has Bokeh and dashboard installed, and does not require installation. The Bokeh server is also started automatically, URL is printed out before login.
 
@@ -18,7 +26,7 @@ Current view:
 ![Alt text](snapshot1.PNG?raw=true "Title")
 
 
-# License
+## License
 
 Licensed under the Apache License, Version 2.0 (the “License”); you may not use this file except in compliance with the License.
 
