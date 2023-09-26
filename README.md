@@ -4,19 +4,28 @@
 ## Introduction
 This repository contains the source code of Kria SOM dashboard tool which provides the debugging information of Kria SOM.
 
-
-
 ## How to use
 
-2021.2 has Bokeh and dashboard installed, and does not require installation. The Bokeh server is also started automatically, URL is printed out before login.
+Yocto/PetaLinux has Bokeh and dashboard installed, and does not require installation. The Bokeh server is also started automatically, URL is printed out before login.
 
 To start Bokeh server manually, use one of the following commands:
 
+    ```bash
     sudo /usr/bin/kria-dashboard
+    ```
 
 or
 
+    ```bash
     sudo bokeh serve --show --allow-websocket-origin=*IP_ADDRESS*:5006 /usr/lib/python3.9/site-packages/kria-dashboard
+    ```
+
+Some versions of Kria OS may not have Kria-dashboard installed by default. To run dashboard, first make sure Bokeh is installed; if Bokeh is not installed, follow [this instruction](https://docs.bokeh.org/en/latest/docs/first_steps/installation.html). Then clone and run Kria-dashboard:
+
+```bash
+git clone https://github.com/Xilinx/kria-dashboard.git
+sudo bokeh serve --show --allow-websocket-origin=*IP_ADDRESS*:5006 kria-dashboard
+```
 
 In a browser go to the following url:
 
@@ -24,7 +33,6 @@ In a browser go to the following url:
 
 Current view:
 ![Alt text](snapshot1.PNG?raw=true "Title")
-
 
 ## License
 
