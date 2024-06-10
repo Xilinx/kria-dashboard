@@ -28,6 +28,9 @@ parts:
       snapcraftctl build
       mkdir -p $SNAPCRAFT_PART_INSTALL/var/opt/kria-dashboard
       cp main.py $SNAPCRAFT_PART_INSTALL/var/opt/kria-dashboard/
+      cp kria-dashboard-snap.sh $SNAPCRAFT_PART_INSTALL/bin
 apps:
   serve:
-    command: bin/bokeh serve --show $SNAP/var/opt/kria-dashboard
+    environment:
+      PYTHONPATH: $PYTHONPATH:$SNAP/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3/site-packages
+    command: bin/kria-dashboard-snap.sh
