@@ -15,11 +15,6 @@ package-repositories:
   - type: apt
     ppa: tchavadar/xilinx
 
-plugs:
-  network:
-  network-bind:
-  hardware-observe:
-
 parts:
   kria-dashboard:
     plugin: python
@@ -36,6 +31,20 @@ parts:
       cp kria-dashboard-snap.sh $SNAPCRAFT_PART_INSTALL/bin
 apps:
   serve:
+    plugs:
+      - network
+      - network-bind
+      - hardware-observe
+    environment:
+      PYTHONPATH: $PYTHONPATH:$SNAP/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3/site-packages
+    command: bin/kria-dashboard-snap.sh
+
+  service:
+    daemon: simple
+    plugs:
+      - network
+      - network-bind
+      - hardware-observe
     environment:
       PYTHONPATH: $PYTHONPATH:$SNAP/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3/site-packages
     command: bin/kria-dashboard-snap.sh
