@@ -1,0 +1,33 @@
+name: kria-dashboard
+base: core22
+version: "0.1"
+summary: Dashboard tool which provides system stat information for Kria SOM
+description: |
+  This is my-snap's description. You have a paragraph or two to tell the
+  most important story about your snap. Keep it under 100 words though,
+  we live in tweetspace and your description wants to look good in the snap
+  store.
+
+grade: devel
+confinement: devmode
+
+package-repositories:
+  - type: apt
+    ppa: tchavadar/xilinx
+
+parts:
+  kria-dashboard:
+    plugin: python
+    source: .
+    python-requirements:
+      - requirements.txt
+    stage-packages:
+      - python3-venv
+      - python3-xlnx-platformstats
+    override-build: |
+      snapcraftctl build
+      mkdir -p $SNAPCRAFT_PART_INSTALL/var/opt/kria-dashboard
+      cp main.py $SNAPCRAFT_PART_INSTALL/var/opt/kria-dashboard/
+apps:
+  serve:
+    command: bin/bokeh serve --show $SNAP/var/opt/kria-dashboard
