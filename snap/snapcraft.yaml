@@ -1,0 +1,51 @@
+name: kria-dashboard
+base: core22
+version: "0.1"
+summary: Dashboard tool which provides system stat information for Kria SOM
+description: |
+  kria-dashboard is a utility snap that provides information about the 
+  stats of Kria SOM. It creates a webserver that serves on port 5006
+  and visualizes the current status of the FPGA including cpu usage, memory
+  usage and loads. It also summarizes the sensor data related to hardware 
+  monitoring of Kria SOM.
+
+grade: stable
+confinement: strict
+
+package-repositories:
+  - type: apt
+    ppa: tchavadar/xilinx
+
+parts:
+  kria-dashboard:
+    plugin: python
+    source: .
+    python-requirements:
+      - requirements.txt
+    stage-packages:
+      - python3-venv
+      - python3-xlnx-platformstats
+    override-build: |
+      snapcraftctl build
+      mkdir -p $SNAPCRAFT_PART_INSTALL/var/opt/kria-dashboard
+      cp main.py $SNAPCRAFT_PART_INSTALL/var/opt/kria-dashboard/
+      cp kria-dashboard-snap.sh $SNAPCRAFT_PART_INSTALL/bin
+apps:
+  serve:
+    plugs:
+      - network
+      - network-bind
+      - hardware-observe
+    environment:
+      PYTHONPATH: $PYTHONPATH:$SNAP/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3/site-packages
+    command: bin/kria-dashboard-snap.sh
+
+  service:
+    daemon: simple
+    plugs:
+      - network
+      - network-bind
+      - hardware-observe
+    environment:
+      PYTHONPATH: $PYTHONPATH:$SNAP/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3/site-packages
+    command: bin/kria-dashboard-snap.sh

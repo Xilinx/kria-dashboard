@@ -13,30 +13,28 @@
 # limitations under the License.
 
 from bokeh.plotting import figure, curdoc
-from bokeh.layouts import layout, row, column, gridplot
+from bokeh.layouts import layout, row, column
 from bokeh.models.widgets import Tabs, Panel
-from bokeh.models.annotations import Title
-from bokeh.models import ColumnDataSource, DataTable, DateFormatter, TableColumn, HTMLTemplateFormatter
-from bokeh.models import Button, Div, CheckboxGroup, Range1d
+from bokeh.models import (
+    ColumnDataSource,
+    DataTable,
+    TableColumn,
+)
+from bokeh.models import Button, Div, Range1d
 from bokeh.models import HoverTool
 from bokeh.models import TextInput
-from bokeh.models import Paragraph, Div, CustomJS
-from bokeh.events import ButtonClick
-from bokeh.themes import built_in_themes
+from bokeh.models import Div
 from bokeh.driving import linear
 
 from collections import deque
-import subprocess
-from functools import partial
 
-import sys
 
 from xlnx_platformstats import xlnx_platformstats
 
 xlnx_platformstats.init()
 
-bg_color = '#15191C'
-text_color = '#E0E0E0'
+bg_color = "#15191C"
+text_color = "#E0E0E0"
 
 ##################################################
 ##### Platform Stat Tab ##########################
@@ -46,8 +44,16 @@ sample_size = 60
 sample_size_actual = 60
 interval = 1
 x = deque([0] * sample_size)
-color_list = ["darkseagreen", "steelblue", "indianred", "chocolate", "mediumpurple", "rosybrown", "gold",
-              "mediumaquamarine"]
+color_list = [
+    "darkseagreen",
+    "steelblue",
+    "indianred",
+    "chocolate",
+    "mediumpurple",
+    "rosybrown",
+    "gold",
+    "mediumaquamarine",
+]
 
 
 def clear_min_max():
@@ -67,10 +73,10 @@ cpu_labels = [
     "A-53_Core_3",
 ]
 cpu_data = {
-    'A-53_Core_0': deque([0.0] * sample_size),
-    'A-53_Core_1': deque([0.0] * sample_size),
-    'A-53_Core_2': deque([0.0] * sample_size),
-    'A-53_Core_3': deque([0.0] * sample_size),
+    "A-53_Core_0": deque([0.0] * sample_size),
+    "A-53_Core_1": deque([0.0] * sample_size),
+    "A-53_Core_2": deque([0.0] * sample_size),
+    "A-53_Core_3": deque([0.0] * sample_size),
 }
 volt_labels = [
     "VCC_PSPLL",
@@ -131,8 +137,11 @@ power_data = deque([0] * sample_size)
 
 # title
 title1 = Div(
-    text="""<h1 style="color :""" + text_color + """; text-align :center">Kria&trade; SOM: Hardware Platform Statistics</h1>""",
-    width=550)
+    text="""<h1 style="color :"""
+    + text_color
+    + """; text-align :center">Kria&trade; SOM: Hardware Platform Statistics</h1>""",
+    width=550,
+)
 
 # average cpu display
 average_cpu = 0.0
@@ -145,30 +154,50 @@ cpu_freq = [0, 0, 0, 0]
 cpu_freq_display = Div(text=cpu_freq_text, width=400)
 
 # CPU line plot
-cpu_plot = figure(plot_width=800, plot_height=300, title='CPU Utilization %')
+cpu_plot = figure(plot_width=800, plot_height=300, title="CPU Utilization %")
 cpu_ds = [0, 0, 0, 0]
 for i in range(len(cpu_labels)):
-    cpu_ds[i] = (cpu_plot.line(x, cpu_data[cpu_labels[i]], line_width=2,
-                               color=color_list[i], legend_label=cpu_labels[i])).data_source
+    cpu_ds[i] = (
+        cpu_plot.line(
+            x,
+            cpu_data[cpu_labels[i]],
+            line_width=2,
+            color=color_list[i],
+            legend_label=cpu_labels[i],
+        )
+    ).data_source
 cpu_plot.legend.click_policy = "hide"
 
 # current line plot
-current_plot = figure(plot_width=500, plot_height=300, title='Total SOM Current in mA')
-current_ds = (current_plot.line(x, current_data, line_width=2,
-                                color=color_list[0], legend_label="Current")).data_source
+current_plot = figure(plot_width=500, plot_height=300, title="Total SOM Current in mA")
+current_ds = (
+    current_plot.line(
+        x, current_data, line_width=2, color=color_list[0], legend_label="Current"
+    )
+).data_source
 current_plot.legend.click_policy = "hide"
 
 # power line plot
-power_plot = figure(plot_width=500, plot_height=300, title='Total SOM Power in W')
-power_ds = (power_plot.line(x, power_data, line_width=2,
-                            color=color_list[0], legend_label="Power")).data_source
+power_plot = figure(plot_width=500, plot_height=300, title="Total SOM Power in W")
+power_ds = (
+    power_plot.line(
+        x, power_data, line_width=2, color=color_list[0], legend_label="Power"
+    )
+).data_source
 power_plot.legend.click_policy = "hide"
 
 # temperature line plot
-temp_plot = figure(plot_width=500, plot_height=300, title='Temperature in Celsius')
+temp_plot = figure(plot_width=500, plot_height=300, title="Temperature in Celsius")
 temp_ds = [0, 0, 0, 0]
-temp_ds[0] = (temp_plot.line(x, temp_data[temp_labels[0]], line_width=2,
-                             color=color_list[0], legend_label=temp_labels[0])).data_source
+temp_ds[0] = (
+    temp_plot.line(
+        x,
+        temp_data[temp_labels[0]],
+        line_width=2,
+        color=color_list[0],
+        legend_label=temp_labels[0],
+    )
+).data_source
 temp_plot.legend.click_policy = "hide"
 
 # table of min/max for temperature
@@ -179,11 +208,18 @@ min_max_temp_source = ColumnDataSource(min_max_temp)
 min_max_temp_column = [
     TableColumn(field="temp_labels", title="Temperature"),
     TableColumn(field="max_temp", title="Max"),
-    TableColumn(field="min_temp", title="Min")
+    TableColumn(field="min_temp", title="Min"),
 ]
 
-temp_data_table = DataTable(source=min_max_temp_source, columns=min_max_temp_column, index_position=None,
-                            width=400, height=200, background=bg_color, css_classes=['custom_table'])
+temp_data_table = DataTable(
+    source=min_max_temp_source,
+    columns=min_max_temp_column,
+    index_position=None,
+    width=400,
+    height=200,
+    background=bg_color,
+    css_classes=["custom_table"],
+)
 
 # table of min/max for voltages
 max_volt = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -193,40 +229,76 @@ min_max_volt_source = ColumnDataSource(min_max_volt)
 min_max_volt_column = [
     TableColumn(field="volt_labels", title="Voltage"),
     TableColumn(field="max_volt", title="Max"),
-    TableColumn(field="min_volt", title="Min")
+    TableColumn(field="min_volt", title="Min"),
 ]
 
-volt_data_table = DataTable(source=min_max_volt_source, columns=min_max_volt_column, index_position=None,
-                            width=400, height=200, background=bg_color, css_classes=['custom_table'])
+volt_data_table = DataTable(
+    source=min_max_volt_source,
+    columns=min_max_volt_column,
+    index_position=None,
+    width=400,
+    height=200,
+    background=bg_color,
+    css_classes=["custom_table"],
+)
 
 # memory line plot
-mem_plot = figure(plot_width=800, plot_height=300, title='Total Free Memory in kB')
-mem_ds = (mem_plot.line(x, mem_data["MemFree"], line_width=2,
-                        color=color_list[0], legend_label="MemFree")).data_source
+mem_plot = figure(plot_width=800, plot_height=300, title="Total Free Memory in kB")
+mem_ds = (
+    mem_plot.line(
+        x,
+        mem_data["MemFree"],
+        line_width=2,
+        color=color_list[0],
+        legend_label="MemFree",
+    )
+).data_source
 mem_plot.legend.click_policy = "hide"
 
 # memory bar plot
-mem_bar_label = ['MemUsed', 'SwapUsed', 'CMAUsed']
+mem_bar_label = ["MemUsed", "SwapUsed", "CMAUsed"]
 mem_bar_total = [0, 0, 0]
 mem_bar_used = [0, 0, 0]
 mem_bar_available = [0, 0, 0]
 mem_bar_percent = [0.0, 0.0, 0.0]
-mem_bar_dict = dict(mem_bar_label=mem_bar_label, mem_bar_total=mem_bar_total,
-                    mem_bar_used=mem_bar_used, mem_bar_percent=mem_bar_percent,
-                    mem_bar_available=mem_bar_available)
+mem_bar_dict = dict(
+    mem_bar_label=mem_bar_label,
+    mem_bar_total=mem_bar_total,
+    mem_bar_used=mem_bar_used,
+    mem_bar_percent=mem_bar_percent,
+    mem_bar_available=mem_bar_available,
+)
 mem_bar_source = ColumnDataSource(mem_bar_dict)
-mem_plot_hbar = figure(y_range=mem_bar_label, x_range=[0, 100], plot_width=800, plot_height=300,
-                       title='Memory Usage in %')
-mem_plot_hbar.xaxis.axis_label = '%Used'
-mem_percent_ds = (mem_plot_hbar.hbar(y='mem_bar_label', right='mem_bar_percent',
-                                     tags=mem_bar_label, source=mem_bar_source,
-                                     height=.5, fill_color='steelblue',
-                                     hatch_pattern='vertical_line', hatch_weight=2, line_width=0)).data_source
-hover = HoverTool(tooltips=[("Total in kB:", "@mem_bar_total"), ("Used in kB:", "@mem_bar_used")])
+mem_plot_hbar = figure(
+    y_range=mem_bar_label,
+    x_range=[0, 100],
+    plot_width=800,
+    plot_height=300,
+    title="Memory Usage in %",
+)
+mem_plot_hbar.xaxis.axis_label = "%Used"
+mem_percent_ds = (
+    mem_plot_hbar.hbar(
+        y="mem_bar_label",
+        right="mem_bar_percent",
+        tags=mem_bar_label,
+        source=mem_bar_source,
+        height=0.5,
+        fill_color="steelblue",
+        hatch_pattern="vertical_line",
+        hatch_weight=2,
+        line_width=0,
+    )
+).data_source
+hover = HoverTool(
+    tooltips=[("Total in kB:", "@mem_bar_total"), ("Used in kB:", "@mem_bar_used")]
+)
 mem_plot_hbar.add_tools(hover)
 
 # reset button
-reset_button = Button(label="Reset Min/Max and Averages", width=200, button_type='primary')
+reset_button = Button(
+    label="Reset Min/Max and Averages", width=200, button_type="primary"
+)
 reset_button.on_click(clear_min_max)
 
 
@@ -241,9 +313,13 @@ def update_interval(attr, old, new):
     callback = curdoc().add_periodic_callback(update, interval * 1000)
 
 
-input_interval = TextInput(value=str(interval), title="input interval in seconds (minimal 0.5s):",
-                           css_classes=['custom_textinput'], width=100)
-input_interval.on_change('value', update_interval)
+input_interval = TextInput(
+    value=str(interval),
+    title="input interval in seconds (minimal 0.5s):",
+    css_classes=["custom_textinput"],
+    width=100,
+)
+input_interval.on_change("value", update_interval)
 
 
 # sample size
@@ -253,7 +329,7 @@ def update_sample_size(attr, old, new):
     if new_sample_size < sample_size_actual:
         excess = sample_size_actual - new_sample_size
         while excess > 0:
-            x.popleft();
+            x.popleft()
             for j in range(len(cpu_labels)):
                 cpu_data[cpu_labels[j]].popleft()
             for j in range(len(volt_labels)):
@@ -267,9 +343,13 @@ def update_sample_size(attr, old, new):
     sample_size = new_sample_size
 
 
-input_sample_size = TextInput(value=str(sample_size), title="Sample Size:",
-                              css_classes=['custom_textinput'], width=100)
-input_sample_size.on_change('value', update_sample_size)
+input_sample_size = TextInput(
+    value=str(sample_size),
+    title="Sample Size:",
+    css_classes=["custom_textinput"],
+    width=100,
+)
+input_sample_size.on_change("value", update_sample_size)
 
 time = 0
 
@@ -277,7 +357,9 @@ time = 0
 
 cpu_plot.y_range = Range1d(0, 100)
 
-mem_result1 = xlnx_platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
+mem_result1 = (
+    xlnx_platformstats.get_ram_memory_utilization()
+)  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
 mem_plot.y_range = Range1d(0, mem_result1[1])  # get_mem("MemTotal"))
 power_plot.y_range = Range1d(0, 6)
 current_plot.y_range = Range1d(0, 1000)
@@ -315,7 +397,7 @@ def update(step):
             cpu_data[cpu_labels[j]].popleft()
         cpu_data_read = read[j]
         cpu_data[cpu_labels[j]].append(cpu_data_read)
-        cpu_ds[j].trigger('data', x, cpu_data[cpu_labels[j]])
+        cpu_ds[j].trigger("data", x, cpu_data[cpu_labels[j]])
         average_cpu_x = average_cpu_x + cpu_data_read
 
     # average CPU usage
@@ -324,26 +406,46 @@ def update(step):
     average_cpu_sample_size = average_cpu_sample_size + 1
     average_cpu = (average_cpu + (average_cpu_x / 4)) / average_cpu_sample_size
 
-    text = """<h2 style="color :""" + text_color + """;">""" + \
-           "&nbsp; &nbsp; Average CPU utilization over last " + str(average_cpu_sample_size) + \
-           " samples is " + str(round(average_cpu, 2)) + """%</h2>"""
+    text = (
+        """<h2 style="color :"""
+        + text_color
+        + """;">"""
+        + "&nbsp; &nbsp; Average CPU utilization over last "
+        + str(average_cpu_sample_size)
+        + " samples is "
+        + str(round(average_cpu, 2))
+        + """%</h2>"""
+    )
     average_cpu_display.text = text
 
     # CPU frequency
     cpu_freq = []
 
     for j in range(4):
-        cpu_freq.append(str(xlnx_platformstats.get_cpu_frequency(j)[1]))  # //Returns list [return_val, cpu_freq]
+        cpu_freq.append(
+            str(xlnx_platformstats.get_cpu_frequency(j)[1])
+        )  # //Returns list [return_val, cpu_freq]
         # cpu_freq.append(open('/sys/devices/system/cpu/cpu' + str(j) + '/cpufreq/cpuinfo_cur_freq', 'r').read())
 
-    cpu_freq_display.text = cpu_freq_text + """<p style="color :""" + text_color + """;">&nbsp; &nbsp;CPU0:""" + \
-                            cpu_freq[0] + \
-                            "MHz<br>&nbsp; &nbsp;CPU1:" + cpu_freq[1] + \
-                            "MHz<br>&nbsp; &nbsp;CPU2:" + cpu_freq[2] + \
-                            "MHz<br>&nbsp; &nbsp;CPU3:" + cpu_freq[3] + "MHz"
+    cpu_freq_display.text = (
+        cpu_freq_text
+        + """<p style="color :"""
+        + text_color
+        + """;">&nbsp; &nbsp;CPU0:"""
+        + cpu_freq[0]
+        + "MHz<br>&nbsp; &nbsp;CPU1:"
+        + cpu_freq[1]
+        + "MHz<br>&nbsp; &nbsp;CPU2:"
+        + cpu_freq[2]
+        + "MHz<br>&nbsp; &nbsp;CPU3:"
+        + cpu_freq[3]
+        + "MHz"
+    )
 
     volts = []
-    volts = xlnx_platformstats.get_voltages()  # Returns list [return_val, VCC_PSPLL, PL_VCCINT, VOLT_DDRS, VCC_PSINTFP, VCC_PS    _FPD, PS_IO_BANK_500, VCC_PS_GTR, VTT_PS_GTR, total_voltage]
+    volts = (
+        xlnx_platformstats.get_voltages()
+    )  # Returns list [return_val, VCC_PSPLL, PL_VCCINT, VOLT_DDRS, VCC_PSINTFP, VCC_PS    _FPD, PS_IO_BANK_500, VCC_PS_GTR, VTT_PS_GTR, total_voltage]
     volts.pop(0)
 
     for j in range(len(volt_labels)):
@@ -354,10 +456,14 @@ def update(step):
         if (volt_read < min_volt[j]) or (volt_read > max_volt[j]):
             min_volt[j] = min(min_volt[j], int(volts[j]))
             max_volt[j] = max(max_volt[j], int(volts[j]))
-            volt_data_table.source.trigger('data', volt_data_table.source, volt_data_table.source)
+            volt_data_table.source.trigger(
+                "data", volt_data_table.source, volt_data_table.source
+            )
 
     temperatures = []
-    temperatures = xlnx_platformstats.get_temperatures()  # Returns list [return_val, LPD_TEMP, FPD_TEMP, PL_TEMP]
+    temperatures = (
+        xlnx_platformstats.get_temperatures()
+    )  # Returns list [return_val, LPD_TEMP, FPD_TEMP, PL_TEMP]
     temperatures.pop(0)
     for j in range(len(temp_labels)):
         if sample_size_actual >= sample_size:
@@ -367,31 +473,43 @@ def update(step):
         if (temperature_read < min_temp[j]) or (temperature_read > max_temp[j]):
             min_temp[j] = min(min_temp[j], temperature_read)
             max_temp[j] = max(max_temp[j], temperature_read)
-            temp_data_table.source.trigger('data', temp_data_table.source, temp_data_table.source)
-    temp_ds[0].trigger('data', x, temp_data[temp_labels[0]])
+            temp_data_table.source.trigger(
+                "data", temp_data_table.source, temp_data_table.source
+            )
+    temp_ds[0].trigger("data", x, temp_data[temp_labels[0]])
 
-    ina260_current = xlnx_platformstats.get_current()[1]  # Returns list [return_val, total_current
+    ina260_current = xlnx_platformstats.get_current()[
+        1
+    ]  # Returns list [return_val, total_current
 
     if sample_size_actual >= sample_size:
         current_data.popleft()
     current_data.append(int(ina260_current))
-    current_ds.trigger('data', x, current_data)
+    current_ds.trigger("data", x, current_data)
 
-    ina260_power = (xlnx_platformstats.get_power()[1] / 1000000)  # Returns list [return_val, total_power]
+    ina260_power = (
+        xlnx_platformstats.get_power()[1] / 1000000
+    )  # Returns list [return_val, total_power]
     if sample_size_actual >= sample_size:
         power_data.popleft()
     power_data.append(ina260_power)
-    power_ds.trigger('data', x, power_data)
+    power_ds.trigger("data", x, power_data)
 
     # Mem line chart
-    mem_result1 = xlnx_platformstats.get_ram_memory_utilization()  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
-    mem_result2 = xlnx_platformstats.get_swap_memory_utilization()  # Returns list [return_val, SwapTotal, SwapFree]
-    mem_result3 = xlnx_platformstats.get_cma_utilization()  # Returns list [return_val, CmaTotal, CmaFree]
+    mem_result1 = (
+        xlnx_platformstats.get_ram_memory_utilization()
+    )  # Returns list [return_val, MemTotal, MemFree, MemAvailable]
+    mem_result2 = (
+        xlnx_platformstats.get_swap_memory_utilization()
+    )  # Returns list [return_val, SwapTotal, SwapFree]
+    mem_result3 = (
+        xlnx_platformstats.get_cma_utilization()
+    )  # Returns list [return_val, CmaTotal, CmaFree]
     mem_num = mem_result1[2]  # get_mem("MemFree")
     if sample_size_actual >= sample_size:
         mem_data["MemFree"].popleft()
     mem_data["MemFree"].append(mem_num)
-    mem_ds.trigger('data', x, mem_data["MemFree"])
+    mem_ds.trigger("data", x, mem_data["MemFree"])
 
     # Memory usage Horizontal bar chart
     mem_bar_total[0] = mem_result1[1]  # get_mem('MemTotal')
@@ -406,26 +524,32 @@ def update(step):
     mem_bar_available[2] = mem_result3[2]  # get_mem('CmaFree')
     mem_bar_used[2] = mem_bar_total[2] - mem_bar_available[2]
     mem_bar_percent[2] = 100 * mem_bar_used[2] / max(mem_bar_total[2], 1)
-    mem_percent_ds.trigger('data', mem_bar_label, mem_bar_percent)
+    mem_percent_ds.trigger("data", mem_bar_label, mem_bar_percent)
 
     if sample_size_actual < sample_size:
         sample_size_actual = sample_size_actual + 1
 
 
 # margin:  Margin-Top, Margin-Right, Margin-Bottom and Margin-Left
-user_interface = column(reset_button, input_sample_size, input_interval,  # checkbox_group,
-                        background=bg_color,
-                        margin=(50, 50, 50, 100))
-cpu_freq_block = column(cpu_freq_display,
-                        background=bg_color,
-                        margin=(0, 0, 0, 100))
-layout1 = layout(column(row(title1, align='center'),
-                        average_cpu_display,
-                        row(cpu_plot, user_interface, cpu_freq_block, background=bg_color),
-                        row(mem_plot, mem_plot_hbar, background=bg_color),
-                        row(power_plot, current_plot, temp_plot, background=bg_color),
-                        row(volt_data_table, temp_data_table, background=bg_color),
-                        background=bg_color))
+user_interface = column(
+    reset_button,
+    input_sample_size,
+    input_interval,  # checkbox_group,
+    background=bg_color,
+    margin=(50, 50, 50, 100),
+)
+cpu_freq_block = column(cpu_freq_display, background=bg_color, margin=(0, 0, 0, 100))
+layout1 = layout(
+    column(
+        row(title1, align="center"),
+        average_cpu_display,
+        row(cpu_plot, user_interface, cpu_freq_block, background=bg_color),
+        row(mem_plot, mem_plot_hbar, background=bg_color),
+        row(power_plot, current_plot, temp_plot, background=bg_color),
+        row(volt_data_table, temp_data_table, background=bg_color),
+        background=bg_color,
+    )
+)
 
 # Add a periodic callback to be run every 1000 milliseconds
 callback = curdoc().add_periodic_callback(update, interval * 1000)
@@ -434,8 +558,7 @@ callback = curdoc().add_periodic_callback(update, interval * 1000)
 ##### Group Tabs        ##########################
 ##################################################
 
-curdoc().theme = 'dark_minimal'
+curdoc().theme = "dark_minimal"
 tab1 = Panel(child=layout1, title="Platform Statistic Dashboard")
 tabs = Tabs(tabs=[tab1])
 curdoc().add_root(tabs)
-
