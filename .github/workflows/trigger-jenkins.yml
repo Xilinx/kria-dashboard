@@ -2,16 +2,28 @@ name: Trigger Jenkins Build
 
 on:
   push:
-    # branches:
-    #   - main
+    branches:
+      - '*'  # Trigger on all branches
   pull_request:
-    # branches:
-    #   - main
+    branches:
+      - '*'  # Trigger on all branches
 
 jobs:
   trigger-jenkins:
     runs-on: ubuntu-22.04
+
     steps:
+      - name: Set up environment variables
+        run: |
+          echo "Setting up environment variables..."
+          echo "JENKINS_URL: ${{ secrets.JENKINS_URL }}"
+          echo "JOB_NAME: ${{ secrets.JOB_NAME }}"
+          echo "JENKINS_USER: ${{ secrets.JENKINS_USER }}"
+          echo "GIT_COMMIT: ${{ github.sha }}"
+          echo "GIT_BRANCH: ${{ github.ref }}"
+          echo "PR_NUMBER: ${{ github.event.number }}"
+          echo "GITHUB_REPO: ${{ github.repository }}"
+
       - name: Trigger Jenkins Build
         env:
           JENKINS_URL: ${{ secrets.JENKINS_URL }}
@@ -23,7 +35,8 @@ jobs:
           PR_NUMBER: ${{ github.event.number }}
           GITHUB_REPO: ${{ github.repository }}
         run: |
-          curl -X POST "$JENKINS_URL/job/$JOB_NAME/buildWithParameters?token=$JENKINS_TOKEN" \
+          echo "Triggering Jenkins build..."
+          curl -X POST "$JENKINS_URL/job/$JOB_NAME/buildWithParameters?token=$JENKINS_API_TOKEN" \
             --user "$JENKINS_USER:$JENKINS_API_TOKEN" \
             --data-urlencode "GIT_COMMIT=$GIT_COMMIT" \
             --data-urlencode "GIT_BRANCH=$GIT_BRANCH" \
