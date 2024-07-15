@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Print environment variables for debugging
+      - name: Print secrets for debugging purposes
         run: |
           echo "Printing secrets for debugging purposes..."
           echo "JENKINS_URL: ${{ secrets.JENKINS_URL }}"
@@ -24,9 +24,14 @@ jobs:
       - name: Set up environment variables
         run: |
           echo "Setting up environment variables..."
-          echo "JENKINS_URL is set"
-          echo "JOB_NAME starts with ${JOB_NAME:0:4}"
-          echo "JENKINS_USER starts with ${JENKINS_USER:0:2}"
+          export JENKINS_URL="${{ secrets.JENKINS_URL }}"
+          export JOB_NAME="${{ secrets.JOB_NAME }}"
+          export JENKINS_USER="${{ secrets.JENKINS_USER }}"
+          export JENKINS_API_TOKEN="${{ secrets.JENKINS_API_TOKEN }}"
+          echo "JENKINS_URL is set to $JENKINS_URL"
+          echo "JOB_NAME is set to $JOB_NAME"
+          echo "JENKINS_USER is set to $JENKINS_USER"
+
           echo "GIT_COMMIT: ${{ github.sha }}"
           echo "GIT_BRANCH: ${{ github.ref }}"
           echo "PR_NUMBER: ${{ github.event.number }}"
@@ -35,7 +40,9 @@ jobs:
       - name: Test DNS Resolution
         run: |
           echo "Testing DNS resolution for Jenkins URL..."
-          nslookup $(echo "${{ secrets.JENKINS_URL }}" | awk -F[/:] '{print $4}') || exit 1
+          JENKINS_HOST=$(echo "${{ secrets.JENKINS_URL }}" | sed -E 's|^[^/]+://([^/:]+).*|\1|')
+          echo "Extracted Jenkins Host: $JENKINS_HOST"
+          nslookup $JENKINS_HOST || exit 1
 
       - name: Test Jenkins URL
         run: |
