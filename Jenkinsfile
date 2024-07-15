@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        label 'xcoengvm229115'
-    }
+    agent any
   
     environment {
         MAIN_PROJECT = "${JOB_NAME.split('/')[-2]}"
