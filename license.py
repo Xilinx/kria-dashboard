@@ -41,7 +41,9 @@ def main(prNumber, access_token):
 
     # GitHub API endpoint for retrieving files modified or added in a pull request
     # url = f"https://gitenterprise.xilinx.com/api/v3/repos/suchetla/LICENSE-PR-CHECKS/pulls/{pull_request_number}/files"
-    url = f"https://gitenterprise.xilinx.com/api/v3/repos/Xilinx/kria-dashboard/pulls/{pull_request_number}/files"
+    # url = f"https://gitenterprise.xilinx.com/api/v3/repos/Xilinx/kria-dashboard/pulls/{pull_request_number}/files"
+    url = f"https://api.github.com/repos/Xilinx/kria-dashboard/pulls/{pull_request_number}/files"
+
 
     # Add your GitHub token to the headers for authentication
     headers = {"Authorization": f"token {github_token}"}
@@ -97,7 +99,8 @@ def main(prNumber, access_token):
 
         # GitHub API endpoint for retrieving files from PR_Check repository
         # pr_check_base_url = "https://gitenterprise.xilinx.com/api/v3/repos/ssw-devops/PR_Check/contents/LICENSES/LICENSE-PR-CHECKS/"
-        pr_check_base_url = "https://gitenterprise.xilinx.com/api/v3/repos/ssw-devops/PR_Check/contents/LICENSES/kria-dashboard/"
+        # pr_check_base_url = "https://gitenterprise.xilinx.com/api/v3/repos/ssw-devops/PR_Check/contents/LICENSES/kria-dashboard/"
+        pr_check_base_url = "https://api.github.com/repos/suchetla/PR_Check/contents/LICENSES/kria-dashboard/"
         pr_check_response = requests.get(pr_check_base_url, headers=headers)
 
         if pr_check_response.status_code == 200:
@@ -117,7 +120,8 @@ def main(prNumber, access_token):
 
                 # Retrieve old content from the source repo
                 # source_file_url = f"https://gitenterprise.xilinx.com/api/v3/repos/suchetla/LICENSE-PR-CHECKS/contents/{modified_file_name}"
-                source_file_url = f"https://gitenterprise.xilinx.com/api/v3/repos/Xilinx/kria-dashboard/contents/{modified_file_name}"
+                # source_file_url = f"https://gitenterprise.xilinx.com/api/v3/repos/Xilinx/kria-dashboard/contents/{modified_file_name}"
+                source_file_url = f"https://api.github.com/repos/Xilinx/kria-dashboard/contents/{modified_file_name}"
                 source_file_response = requests.get(source_file_url, headers=headers)
 
                 if source_file_response.status_code == 200:
