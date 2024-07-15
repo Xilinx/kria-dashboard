@@ -1,7 +1,6 @@
 pipeline {
     agent {
-        label 'xcoengvm229115'
-    }
+        label any
   
     environment {
         MAIN_PROJECT = "${JOB_NAME.split('/')[-2]}"
@@ -69,7 +68,8 @@ def postComment(prNumber, comment) {
         -H 'Authorization: token ${env.ACCESS_TOKEN}' \\
         -H 'Content-Type: application/json' \\
         -d '${jsonBody}' \\
-        https://gitenterprise.xilinx.com/api/v3/repos/${env.GITHUB_REPO}/issues/${prNumber}/comments
+        https://api.github.com/repos/${env.GITHUB_REPO}/issues/${prNumber}/comments
+
     """
 }
 
@@ -78,7 +78,8 @@ def setGitHubCommitStatus(buildResult) {
         curl -X POST \\
         -H "Authorization: token ${env.ACCESS_TOKEN}" \\
         -H "Accept: application/vnd.github.v3+json" \\
-        https://gitenterprise.xilinx.com/api/v3/repos/${env.GITHUB_REPO}/statuses/${env.GIT_COMMIT} \\
+        https://api.github.com/repos/${env.GITHUB_REPO}/statuses/${env.GIT_COMMIT} \\
+
         -d '{ "state": "${buildResult.toLowerCase()}", "description": "${buildResult}", "context": "Jenkins CI" }'
     """
 }
