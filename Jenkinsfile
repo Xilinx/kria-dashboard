@@ -55,7 +55,7 @@ pipeline {
             }
         }
     }
-}
+}//endofpipeline
 
 def postComment(prNumber, comment) {
     // Construct JSON body using JsonOutput.toJson method
