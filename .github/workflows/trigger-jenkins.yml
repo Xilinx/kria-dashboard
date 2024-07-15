@@ -16,15 +16,26 @@ jobs:
       - name: Set up environment variables
         run: |
           echo "Setting up environment variables..."
-          echo "JENKINS_URL: ${{ secrets.JENKINS_URL }}"
-          echo "JOB_NAME: ${{ secrets.JOB_NAME }}"
-          echo "JENKINS_USER: ${{ secrets.JENKINS_USER }}"
+          echo "JENKINS_URL is set"
+          echo "JOB_NAME starts with ${JOB_NAME:0:4}"
+          echo "JENKINS_USER starts with ${JENKINS_USER:0:2}"
           echo "GIT_COMMIT: ${{ github.sha }}"
           echo "GIT_BRANCH: ${{ github.ref }}"
           echo "PR_NUMBER: ${{ github.event.number }}"
           echo "GITHUB_REPO: ${{ github.repository }}"
 
+      - name: Test DNS Resolution
+        run: |
+          echo "Testing DNS resolution for Jenkins URL..."
+          nslookup $(echo "${{ secrets.JENKINS_URL }}" | awk -F[/:] '{print $4}') || exit 1
+
+      - name: Test Jenkins URL
+        run: |
+          echo "Testing Jenkins URL..."
+          curl -I "${{ secrets.JENKINS_URL }}" || exit 1
+
       - name: Trigger Jenkins Build
+        if: success()  # Proceed only if the previous steps succeed
         env:
           JENKINS_URL: ${{ secrets.JENKINS_URL }}
           JOB_NAME: ${{ secrets.JOB_NAME }}
