@@ -18,17 +18,8 @@ jobs:
       with:
         python-version: '3.9.12'
     
-    - name: Echo Python version
-      run: python3 --version    
-
     - name: Install dependencies
       run: python3 -m pip install requests
-
-    - name: Debug PR Number
-      run: echo "PR_NUMBER=${{ github.event.pull_request.number }}"
-
-    - name: Debug PAT
-      run: echo "PAT_TOKEN=${{ secrets.GH_PAT }}"
 
     - name: Run license.py
       id: license_check
@@ -36,4 +27,37 @@ jobs:
         PR_NUMBER=${{ github.event.pull_request.number }}
         PAT_TOKEN=${{ secrets.GH_PAT }}
         python3 license.py $PR_NUMBER $PAT_TOKEN
+      env:
+        PAT_TOKEN: ${{ secrets.GH_PAT }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
 
+    - name: Capture script output
+      id: capture_output
+      run: echo "::set-output name=output::$(cat license_result.txt)" # Adjust the filename as per your script output
+
+    - name: Post comment on GitHub
+      if: steps.license_check.outputs.output != 'License Check is Passed' && steps.license_check.outputs.output != 'Skipping License Check for this File' && steps.license_check.outputs.output != 'This is the Approved License. Hence, License Check is Passed'
+      run: |
+        COMMENT_BODY="LICENSE CHECKS:\n\n${{ steps.capture_output.outputs.output }}"
+        echo "Posting comment to PR#${{ github.event.pull_request.number }}:"
+        echo "$COMMENT_BODY"
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GH_PAT }}" \
+          -H "Content-Type: application/json" \
+          -d "{\"body\": \"$COMMENT_BODY\"}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
+
+    - name: Set GitHub commit status
+      if: steps.license_check.outputs.output == 'License Check is Passed' || steps.license_check.outputs.output == 'Skipping License Check for this File' || steps.license_check.outputs.output == 'This is the Approved License. Hence, License Check is Passed'
+      uses: actions/github-script@v4
+      with:
+        github-token: ${{ secrets.GH_PAT }}
+        script: |
+          github.repos.createCommitStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            sha: github.sha,
+            state: 'success',
+            context: 'License Check',
+            description: 'License check passed'
+          })
