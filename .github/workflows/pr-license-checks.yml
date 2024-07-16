@@ -21,6 +21,9 @@ jobs:
     - name: Echo Python version
       run: python3 --version    
 
+    - name: Install dependencies
+      run: python3 -m pip install requests
+
     - name: Run license.py
       id: license_check
       env:
