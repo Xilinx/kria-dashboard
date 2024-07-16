@@ -33,7 +33,7 @@ jobs:
 
     - name: Post comment on GitHub
       run: |
-        COMMENT_BODY="LICENSE CHECKS:\n\n$(cat license_result.txt)"
+        COMMENT_BODY=$(cat license_result.txt)
         echo "Posting comment to PR#${{ github.event.pull_request.number }}:"
         echo "$COMMENT_BODY"
         curl -X POST \
@@ -41,4 +41,3 @@ jobs:
           -H "Content-Type: application/json" \
           -d "{\"body\": \"$COMMENT_BODY\"}" \
           "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
-
