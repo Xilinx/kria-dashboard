@@ -1,0 +1,60 @@
+name: PR License Check
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  run-license-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6.2'
+
+    - name: Run license.py
+      id: license_check
+      env:
+        PR_NUMBER: ${{ github.event.number }}
+        PAT_TOKEN: ${{ secrets.GH_PAT }}
+      run: |
+        script_output=$(python3 license.py $PR_NUMBER $PAT_TOKEN)
+        echo "$script_output"
+        echo "::set-output name=result::$script_output"
+        if [[ "$script_output" == *"License Check is Passed"* || "$script_output" == *"Skipping License Check for this File"* || "$script_output" == *"This is the Approved License. Hence, License Check is Passed"* ]]; then
+          echo "SUCCESS"
+        else
+          echo "FAILURE"
+          exit 1
+        fi
+
+    - name: Post result on GitHub
+      if: always()
+      run: |
+        PR_NUMBER=${{ github.event.number }}
+        GIT_COMMIT=${{ github.sha }}
+        SCRIPT_OUTPUT="${{ steps.license_check.outputs.result }}"
+        BUILD_RESULT="SUCCESS"
+        if [[ "${{ job.status }}" == "failure" ]]; then
+          BUILD_RESULT="FAILURE"
+        fi
+
+        echo "Posting comment to PR #${PR_NUMBER}"  # This is the current PR
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GH_PAT }}" \
+          -H "Content-Type: application/json" \
+          -d "{\"body\": \"$SCRIPT_OUTPUT\"}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
+
+        echo "Setting commit status"
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GH_PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/statuses/${GIT_COMMIT}" \
+          -d "{ \"state\": \"${BUILD_RESULT,,}\", \"description\": \"${BUILD_RESULT}\", \"context\": \"GitHub Actions CI\" }"

@@ -31,10 +31,10 @@ def preprocess_content(content):
 
     return processed_script
 
-def main(prNumber):
+def main(prNumber, access_token):
     print("LICENSE CHECKS: ")
     # Replace with your GitHub token
-    # github_token = access-token
+    github_token = access_token
 
     # Replace with the pull request number you're interested in
     pull_request_number = prNumber
@@ -212,4 +212,5 @@ def main(prNumber):
         print(f"Failed to retrieve files from the pull request: {response.text}")
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    # main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])
