@@ -21,24 +21,20 @@ jobs:
     - name: Install dependencies
       run: python3 -m pip install requests
 
-    - name: Run license.py
+    - name: Run license.py and capture output
       id: license_check
-      run: |
-        PR_NUMBER=${{ github.event.pull_request.number }}
-        PAT_TOKEN=${{ secrets.GH_PAT }}
-        python3 license.py $PR_NUMBER $PAT_TOKEN
       env:
         PAT_TOKEN: ${{ secrets.GH_PAT }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        output=$(python3 license.py $PR_NUMBER $PAT_TOKEN)
+        echo "$output" > license_result.txt
+        echo "::set-output name=output::$output"
 
-    - name: Capture script output
-      id: capture_output
-      run: echo "::set-output name=output::$(cat license_result.txt)" # Adjust the filename as per your script output
-
-    - name: Post comment on GitHub
+    - name: Post comment on GitHub if license check fails
       if: steps.license_check.outputs.output != 'License Check is Passed' && steps.license_check.outputs.output != 'Skipping License Check for this File' && steps.license_check.outputs.output != 'This is the Approved License. Hence, License Check is Passed'
       run: |
-        COMMENT_BODY="LICENSE CHECKS:\n\n${{ steps.capture_output.outputs.output }}"
+        COMMENT_BODY="LICENSE CHECKS:\n\n$(cat license_result.txt)"
         echo "Posting comment to PR#${{ github.event.pull_request.number }}:"
         echo "$COMMENT_BODY"
         curl -X POST \
