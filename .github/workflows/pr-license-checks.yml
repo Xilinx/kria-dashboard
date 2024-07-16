@@ -24,12 +24,22 @@ jobs:
     - name: Install dependencies
       run: python3 -m pip install requests
 
+    - name: Debug PR Number
+      run: echo "PR_NUMBER=${{ github.event.pull_request.number }}"
+
     - name: Run license.py
       id: license_check
-      env:
-        PR_NUMBER: ${{ github.event.number }}
-        PAT_TOKEN: ${{ secrets.GH_PAT }}
       run: |
+        PR_NUMBER=${{ github.event.pull_request.number }}
+        PAT_TOKEN=${{ secrets.GH_PAT }}
+        if [ -z "${PR_NUMBER}" ]; then
+          echo "Error: PR_NUMBER is not set"
+          exit 1
+        fi
+        if [ -z "${PAT_TOKEN}" ]; then
+          echo "Error: PAT_TOKEN is not set"
+          exit 1
+        fi
         script_output=$(python3 license.py $PR_NUMBER $PAT_TOKEN)
         echo "$script_output"
         echo "::set-output name=result::$script_output"
@@ -43,7 +53,7 @@ jobs:
     - name: Post result on GitHub
       if: always()
       run: |
-        PR_NUMBER=${{ github.event.number }}
+        PR_NUMBER=${{ github.event.pull_request.number }}
         GIT_COMMIT=${{ github.sha }}
         SCRIPT_OUTPUT="${{ steps.license_check.outputs.result }}"
         BUILD_RESULT="SUCCESS"
