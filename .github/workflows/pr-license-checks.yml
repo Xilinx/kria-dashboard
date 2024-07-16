@@ -31,8 +31,7 @@ jobs:
         echo "$output" > license_result.txt
         echo "::set-output name=output::$output"
 
-    - name: Post comment on GitHub if license check fails
-      if: steps.license_check.outputs.output != 'License Check is Passed' && steps.license_check.outputs.output != 'Skipping License Check for this File' && steps.license_check.outputs.output != 'This is the Approved License. Hence, License Check is Passed'
+    - name: Post comment on GitHub
       run: |
         COMMENT_BODY="LICENSE CHECKS:\n\n$(cat license_result.txt)"
         echo "Posting comment to PR#${{ github.event.pull_request.number }}:"
@@ -43,17 +42,3 @@ jobs:
           -d "{\"body\": \"$COMMENT_BODY\"}" \
           "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
 
-    - name: Set GitHub commit status
-      if: steps.license_check.outputs.output == 'License Check is Passed' || steps.license_check.outputs.output == 'Skipping License Check for this File' || steps.license_check.outputs.output == 'This is the Approved License. Hence, License Check is Passed'
-      uses: actions/github-script@v4
-      with:
-        github-token: ${{ secrets.GH_PAT }}
-        script: |
-          github.repos.createCommitStatus({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            sha: github.sha,
-            state: 'success',
-            context: 'License Check',
-            description: 'License check passed'
-          })
