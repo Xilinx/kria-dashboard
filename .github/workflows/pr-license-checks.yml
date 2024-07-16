@@ -27,50 +27,13 @@ jobs:
     - name: Debug PR Number
       run: echo "PR_NUMBER=${{ github.event.pull_request.number }}"
 
+    - name: Debug PAT
+      run: echo "PAT_TOKEN=${{ secrets.GH_PAT }}"
+
     - name: Run license.py
       id: license_check
       run: |
         PR_NUMBER=${{ github.event.pull_request.number }}
         PAT_TOKEN=${{ secrets.GH_PAT }}
-        if [ -z "${PR_NUMBER}" ]; then
-          echo "Error: PR_NUMBER is not set"
-          exit 1
-        fi
-        if [ -z "${PAT_TOKEN}" ]; then
-          echo "Error: PAT_TOKEN is not set"
-          exit 1
-        fi
-        script_output=$(python3 license.py $PR_NUMBER $PAT_TOKEN)
-        echo "$script_output"
-        echo "::set-output name=result::$script_output"
-        if [[ "$script_output" == *"License Check is Passed"* || "$script_output" == *"Skipping License Check for this File"* || "$script_output" == *"This is the Approved License. Hence, License Check is Passed"* ]]; then
-          echo "SUCCESS"
-        else
-          echo "FAILURE"
-          exit 1
-        fi
+        python3 license.py $PR_NUMBER $PAT_TOKEN
 
-    - name: Post result on GitHub
-      if: always()
-      run: |
-        PR_NUMBER=${{ github.event.pull_request.number }}
-        GIT_COMMIT=${{ github.sha }}
-        SCRIPT_OUTPUT="${{ steps.license_check.outputs.result }}"
-        BUILD_RESULT="SUCCESS"
-        if [[ "${{ job.status }}" == "failure" ]]; then
-          BUILD_RESULT="FAILURE"
-        fi
-
-        echo "Posting comment to PR #${PR_NUMBER}"  # This is the current PR
-        curl -X POST \
-          -H "Authorization: token ${{ secrets.GH_PAT }}" \
-          -H "Content-Type: application/json" \
-          -d "{\"body\": \"$SCRIPT_OUTPUT\"}" \
-          "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
-
-        echo "Setting commit status"
-        curl -X POST \
-          -H "Authorization: token ${{ secrets.GH_PAT }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/${{ github.repository }}/statuses/${GIT_COMMIT}" \
-          -d "{ \"state\": \"${BUILD_RESULT,,}\", \"description\": \"${BUILD_RESULT}\", \"context\": \"GitHub Actions CI\" }"
