@@ -34,6 +34,8 @@ jobs:
     - name: Post comment on GitHub
       run: |
         COMMENT_BODY=$(cat license_result.txt)
+        # Replace newline characters with '\n' to properly format the JSON payload
+        COMMENT_BODY=$(echo "$COMMENT_BODY" | sed 's/$/\\n/g' | tr -d '\n')
         echo "Posting comment to PR#${{ github.event.pull_request.number }}:"
         echo "$COMMENT_BODY"
         echo "JSON Payload:"
@@ -44,4 +46,3 @@ jobs:
           -H "Content-Type: application/json" \
           -d "{\"body\": \"$COMMENT_BODY\"}" \
           "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
-
