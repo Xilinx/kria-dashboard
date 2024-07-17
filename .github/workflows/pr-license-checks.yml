@@ -31,7 +31,19 @@ jobs:
         echo "$output" > license_result.txt
         echo "::set-output name=output::$output"
 
+    - name: Check license result
+      id: check_result
+      run: |
+        output=$(cat license_result.txt)
+        if [[ "$output" == *"License Check is Passed"* ]] || [[ "$output" == *"Skipping License Check for this File"* ]] || [[ "$output" == *"This is the Approved License. Hence, License Check is Passed"* ]]; then
+          echo "License check passed."
+        else
+          echo "License check failed."
+          exit 1
+        fi
+
     - name: Post comment on GitHub
+      if: always()
       run: |
         COMMENT_BODY=$(cat license_result.txt)
         # Replace newline characters with '\n' to properly format the JSON payload
@@ -46,3 +58,20 @@ jobs:
           -H "Content-Type: application/json" \
           -d "{\"body\": \"$COMMENT_BODY\"}" \
           "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
+
+    - name: Post status to GitHub
+      if: always()
+      run: |
+        output=$(cat license_result.txt)
+        state="failure"
+        description="License check failed."
+        if [[ "$output" == *"License Check is Passed"* ]] || [[ "$output" == *"Skipping License Check for this File"* ]] || [[ "$output" == *"This is the Approved License. Hence, License Check is Passed"* ]]; then
+          state="success"
+          description="License check passed."
+        fi
+
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GH_PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -d "{\"state\": \"$state\", \"description\": \"$description\", \"context\": \"license-check\"}" \
+          "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}"
