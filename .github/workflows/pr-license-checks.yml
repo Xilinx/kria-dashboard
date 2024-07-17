@@ -33,6 +33,7 @@ jobs:
         PAT_TOKEN: ${{ secrets.GH_PAT }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
+        cp license-repo/xscc.awk .
         output=$(python3 license-repo/kriadashboardlicense.py $PR_NUMBER $PAT_TOKEN)
         echo "$output" > license_result.txt
         echo "::set-output name=output::$output"
