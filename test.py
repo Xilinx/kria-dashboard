@@ -34,6 +34,7 @@ def most_common_word(text):
     return most_common[0] if most_common else None
 
 def main():
+    print('main function starts here')
     text = input("Enter a paragraph of text: ")
 
     cleaned_text = clean_text(text)
