@@ -35,7 +35,7 @@ jobs:
         GH_REPO_NAME: ${{ github.repository }}
       run: |
         cp license-repo/xscc.awk .
-        output=$(python3 license-repo/kriadashboardlicense.py $PR_NUMBER $PAT_TOKEN)
+        output=$(python3 license-repo/standardlicense.py $PR_NUMBER $PAT_TOKEN $GH_REPO_NAME)
         echo "$output" > license_result.txt
         echo "::set-output name=output::$output"
 
