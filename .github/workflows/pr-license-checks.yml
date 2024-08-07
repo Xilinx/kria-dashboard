@@ -13,11 +13,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Checkout license-repo
+    - name: Checkout yocto-scripts repo
       uses: actions/checkout@v2
       with:
-        repository: suchetla/license-repo
-        path: license-repo
+        repository: Xilinx/yocto-scripts
+        path: yocto-scripts
+        ref: kria-apps
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -27,15 +28,17 @@ jobs:
     - name: Install dependencies
       run: python3 -m pip install requests
 
-    - name: Run license.py and capture output
+    - name: Run standardlicense.py and capture output
       id: license_check
       env:
         PAT_TOKEN: ${{ secrets.GH_PAT }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
         GH_REPO_NAME: ${{ github.repository }}
       run: |
-        cp license-repo/xscc.awk .
-        output=$(python3 license-repo/standardlicense.py $PR_NUMBER $PAT_TOKEN $GH_REPO_NAME)
+        echo "PR_NUMBER: $PR_NUMBER"
+        echo "GH_REPO_NAME: $GH_REPO_NAME"
+        cp yocto-scripts/xscc.awk .
+        output=$(python3 yocto-scripts/standardlicense.py $PR_NUMBER $PAT_TOKEN $GH_REPO_NAME)
         echo "$output" > license_result.txt
         echo "::set-output name=output::$output"
 
