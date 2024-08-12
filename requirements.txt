@@ -1,1 +1,2 @@
 bokeh==2.4.3
+numpy<2
