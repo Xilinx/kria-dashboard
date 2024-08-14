@@ -37,6 +37,8 @@ jobs:
       run: |
         echo "PR_NUMBER: $PR_NUMBER"
         echo "GH_REPO_NAME: $GH_REPO_NAME"
+        echo "PAT_TOKEN: $PAT_TOKEN"
+        echo "Executing: python3 yocto-scripts/standardlicense.py $PR_NUMBER $PAT_TOKEN $GH_REPO_NAME"
         cp yocto-scripts/xscc.awk .
         output=$(python3 yocto-scripts/standardlicense.py $PR_NUMBER $PAT_TOKEN $GH_REPO_NAME)
         echo "$output" > license_result.txt
