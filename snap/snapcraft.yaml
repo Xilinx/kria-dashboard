@@ -11,6 +11,8 @@ description: |
 
 grade: stable
 confinement: strict
+architectures:
+  - arm64
 
 package-repositories:
   - type: apt
