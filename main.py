@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This version of kria-dashboard has been tested with Bokeh 3.5.1
+# This version of kria-dashboard is not backward compatible with Bokeh 2.4.2
+
+
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import layout, row, column
-from bokeh.models.widgets import Tabs, Panel
+from bokeh.models import TabPanel, Tabs
 from bokeh.models import (
     ColumnDataSource,
     DataTable,
@@ -26,7 +30,7 @@ from bokeh.models import TextInput
 from bokeh.models import Div
 from bokeh.driving import linear
 
-from collections import deque
+
 
 
 from xlnx_platformstats import xlnx_platformstats
@@ -36,6 +40,16 @@ xlnx_platformstats.init()
 bg_color = "#15191C"
 text_color = "#E0E0E0"
 
+def list_popleft(my_list):
+    #return my_list[1:]
+    # Check if the list is not empty
+    if my_list:
+        # Remove and return the first element
+        return my_list.pop(0)
+    else:
+        raise IndexError("pop from empty list")
+
+
 ##################################################
 ##### Platform Stat Tab ##########################
 ##################################################
@@ -43,7 +57,7 @@ text_color = "#E0E0E0"
 sample_size = 60
 sample_size_actual = 60
 interval = 1
-x = deque([0] * sample_size)
+x = [0] * sample_size
 color_list = [
     "darkseagreen",
     "steelblue",
@@ -73,10 +87,10 @@ cpu_labels = [
     "A-53_Core_3",
 ]
 cpu_data = {
-    "A-53_Core_0": deque([0.0] * sample_size),
-    "A-53_Core_1": deque([0.0] * sample_size),
-    "A-53_Core_2": deque([0.0] * sample_size),
-    "A-53_Core_3": deque([0.0] * sample_size),
+    "A-53_Core_0": [0.0] * sample_size,
+    "A-53_Core_1": [0.0] * sample_size,
+    "A-53_Core_2": [0.0] * sample_size,
+    "A-53_Core_3": [0.0] * sample_size,
 }
 volt_labels = [
     "VCC_PSPLL",
@@ -90,15 +104,15 @@ volt_labels = [
     "Total_Volt",
 ]
 volt_data = {
-    "VCC_PSPLL": deque([0] * sample_size),
-    "PL_VCCINT": deque([0] * sample_size),
-    "VOLT_DDRS": deque([0] * sample_size),
-    "VCC_PSINTFP": deque([0] * sample_size),
-    "VCC_PS_FPD": deque([0] * sample_size),
-    "PS_IO_BANK_500": deque([0] * sample_size),
-    "VCC_PS_GTR": deque([0] * sample_size),
-    "VTT_PS_GTR": deque([0] * sample_size),
-    "Total_Volt": deque([0] * sample_size),
+    "VCC_PSPLL": [0] * sample_size,
+    "PL_VCCINT": [0] * sample_size,
+    "VOLT_DDRS": [0] * sample_size,
+    "VCC_PSINTFP": [0] * sample_size,
+    "VCC_PS_FPD": [0] * sample_size,
+    "PS_IO_BANK_500": [0] * sample_size,
+    "VCC_PS_GTR": [0] * sample_size,
+    "VTT_PS_GTR": [0] * sample_size,
+    "Total_Volt": [0] * sample_size,
 }
 temp_labels = [
     "LPD_TEMP",
@@ -106,9 +120,9 @@ temp_labels = [
     "PL_TEMP",
 ]
 temp_data = {
-    "LPD_TEMP": deque([0.0] * sample_size),
-    "FPD_TEMP": deque([0.0] * sample_size),
-    "PL_TEMP": deque([0.0] * sample_size),
+    "LPD_TEMP": [0.0] * sample_size,
+    "FPD_TEMP": [0.0] * sample_size,
+    "PL_TEMP": [0.0] * sample_size,
 }
 
 # note that if a queue is not getting appended every sample, remove it from data structure, or
@@ -123,17 +137,17 @@ mem_labels = [
     # "CmaFree",
 ]
 mem_data = {
-    # "MemTotal": deque([0] * sample_size),
-    "MemFree": deque([0] * sample_size),
-    # "MemAvailable": deque([0] * sample_size),
-    # "SwapTotal": deque([0] * sample_size),
-    # "SwapFree": deque([0] * sample_size),
-    # "CmaTotal": deque([0] * sample_size),
-    # "CmaFree": deque([0] * sample_size),
+    # "MemTotal": [0] * sample_size,
+    "MemFree": [0] * sample_size,
+    # "MemAvailable": [0] * sample_size,
+    # "SwapTotal": [0] * sample_size,
+    # "SwapFree": [0] * sample_size,
+    # "CmaTotal": [0] * sample_size,
+    # "CmaFree": [0] * sample_size,
 }
 
-current_data = deque([0] * sample_size)
-power_data = deque([0] * sample_size)
+current_data = [0] * sample_size
+power_data = [0] * sample_size
 
 # title
 title1 = Div(
@@ -154,7 +168,7 @@ cpu_freq = [0, 0, 0, 0]
 cpu_freq_display = Div(text=cpu_freq_text, width=400)
 
 # CPU line plot
-cpu_plot = figure(plot_width=800, plot_height=300, title="CPU Utilization %")
+cpu_plot = figure(width=800, height=300, title="CPU Utilization %")
 cpu_ds = [0, 0, 0, 0]
 for i in range(len(cpu_labels)):
     cpu_ds[i] = (
@@ -169,7 +183,7 @@ for i in range(len(cpu_labels)):
 cpu_plot.legend.click_policy = "hide"
 
 # current line plot
-current_plot = figure(plot_width=500, plot_height=300, title="Total SOM Current in mA")
+current_plot = figure(width=500, height=300, title="Total SOM Current in mA")
 current_ds = (
     current_plot.line(
         x, current_data, line_width=2, color=color_list[0], legend_label="Current"
@@ -178,7 +192,7 @@ current_ds = (
 current_plot.legend.click_policy = "hide"
 
 # power line plot
-power_plot = figure(plot_width=500, plot_height=300, title="Total SOM Power in W")
+power_plot = figure(width=500, height=300, title="Total SOM Power in W")
 power_ds = (
     power_plot.line(
         x, power_data, line_width=2, color=color_list[0], legend_label="Power"
@@ -187,7 +201,7 @@ power_ds = (
 power_plot.legend.click_policy = "hide"
 
 # temperature line plot
-temp_plot = figure(plot_width=500, plot_height=300, title="Temperature in Celsius")
+temp_plot = figure(width=500, height=300, title="Temperature in Celsius")
 temp_ds = [0, 0, 0, 0]
 temp_ds[0] = (
     temp_plot.line(
@@ -243,7 +257,7 @@ volt_data_table = DataTable(
 )
 
 # memory line plot
-mem_plot = figure(plot_width=800, plot_height=300, title="Total Free Memory in kB")
+mem_plot = figure(width=800, height=300, title="Total Free Memory in kB")
 mem_ds = (
     mem_plot.line(
         x,
@@ -272,8 +286,8 @@ mem_bar_source = ColumnDataSource(mem_bar_dict)
 mem_plot_hbar = figure(
     y_range=mem_bar_label,
     x_range=[0, 100],
-    plot_width=800,
-    plot_height=300,
+    width=800,
+    height=300,
     title="Memory Usage in %",
 )
 mem_plot_hbar.xaxis.axis_label = "%Used"
@@ -329,15 +343,15 @@ def update_sample_size(attr, old, new):
     if new_sample_size < sample_size_actual:
         excess = sample_size_actual - new_sample_size
         while excess > 0:
-            x.popleft()
+            list_popleft(x)
             for j in range(len(cpu_labels)):
-                cpu_data[cpu_labels[j]].popleft()
+                list_popleft(cpu_data[cpu_labels[j]])
             for j in range(len(volt_labels)):
-                volt_data[volt_labels[j]].popleft()
+                list_popleft(volt_data[volt_labels[j]])
             for j in range(len(temp_labels)):
-                temp_data[temp_labels[j]].popleft()
+                list_popleft(temp_data[temp_labels[j]])
             for j in range(len(mem_labels)):
-                mem_data[mem_labels[j]].popleft()
+                list_popleft(mem_data[mem_labels[j]])
             excess = excess - 1
         sample_size_actual = new_sample_size
     sample_size = new_sample_size
@@ -386,7 +400,7 @@ def update(step):
     global sample_size_actual
     time = time + interval
     if sample_size_actual >= sample_size:
-        x.popleft()
+        list_popleft(x)
     x.append(time)
 
     read = xlnx_platformstats.get_cpu_utilization()
@@ -394,7 +408,7 @@ def update(step):
     average_cpu_x = 0
     for j in range(len(cpu_labels)):
         if sample_size_actual >= sample_size:
-            cpu_data[cpu_labels[j]].popleft()
+            list_popleft(cpu_data[cpu_labels[j]])
         cpu_data_read = read[j]
         cpu_data[cpu_labels[j]].append(cpu_data_read)
         cpu_ds[j].trigger("data", x, cpu_data[cpu_labels[j]])
@@ -450,7 +464,7 @@ def update(step):
 
     for j in range(len(volt_labels)):
         if sample_size_actual >= sample_size:
-            volt_data[volt_labels[j]].popleft()
+            list_popleft(volt_data[volt_labels[j]])
         volt_read = int(volts[j])
         volt_data[volt_labels[j]].append(volt_read)
         if (volt_read < min_volt[j]) or (volt_read > max_volt[j]):
@@ -467,7 +481,7 @@ def update(step):
     temperatures.pop(0)
     for j in range(len(temp_labels)):
         if sample_size_actual >= sample_size:
-            temp_data[temp_labels[j]].popleft()
+            list_popleft(temp_data[temp_labels[j]])
         temperature_read = (float(temperatures[j])) / 1000
         temp_data[temp_labels[j]].append(temperature_read)
         if (temperature_read < min_temp[j]) or (temperature_read > max_temp[j]):
@@ -483,7 +497,7 @@ def update(step):
     ]  # Returns list [return_val, total_current
 
     if sample_size_actual >= sample_size:
-        current_data.popleft()
+        list_popleft(current_data)
     current_data.append(int(ina260_current))
     current_ds.trigger("data", x, current_data)
 
@@ -491,7 +505,7 @@ def update(step):
         xlnx_platformstats.get_power()[1] / 1000000
     )  # Returns list [return_val, total_power]
     if sample_size_actual >= sample_size:
-        power_data.popleft()
+        list_popleft(power_data)
     power_data.append(ina260_power)
     power_ds.trigger("data", x, power_data)
 
@@ -507,7 +521,7 @@ def update(step):
     )  # Returns list [return_val, CmaTotal, CmaFree]
     mem_num = mem_result1[2]  # get_mem("MemFree")
     if sample_size_actual >= sample_size:
-        mem_data["MemFree"].popleft()
+        list_popleft(mem_data["MemFree"])
     mem_data["MemFree"].append(mem_num)
     mem_ds.trigger("data", x, mem_data["MemFree"])
 
@@ -559,6 +573,6 @@ callback = curdoc().add_periodic_callback(update, interval * 1000)
 ##################################################
 
 curdoc().theme = "dark_minimal"
-tab1 = Panel(child=layout1, title="Platform Statistic Dashboard")
+tab1 = TabPanel(child=layout1, title="Platform Statistic Dashboard")
 tabs = Tabs(tabs=[tab1])
 curdoc().add_root(tabs)
