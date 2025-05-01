@@ -14,7 +14,7 @@ Kria Ubuntu 24.04 OS also have Kria-dashboard baked in. The url currently does n
 
 And this will be the URL:    ```http://*IP_ADDRESS*:5006/kria-dashboard```
 
-Kria Ubuntu 22.04 does not have Kria-dashboard baked in, but it is in the Xilinx PPA and can be installed after Linux boot and setup ([KD240]([https://xilinx.github.io/kria-apps-docs/kd240/build/html/docs/kria_starterkit_linux_boot.html](https://xilinx.github.io/kria-apps-docs/kd240/build/html/docs/linux_boot.html)), [KR260](https://xilinx.github.io/kria-apps-docs/kr260/build/html/docs/linux_boot.html), [KV260](https://xilinx.github.io/kria-apps-docs/kv260/2022.1/build/html/docs/linux_boot.html))
+Kria Ubuntu 22.04 does not have Kria-dashboard baked in, but it is in the Xilinx PPA and can be installed after Linux boot and setup ([KD240](https://xilinx.github.io/kria-apps-docs/kd240/build/html/docs/linux_boot.html)), [KR260](https://xilinx.github.io/kria-apps-docs/kr260/build/html/docs/linux_boot.html), [KV260](https://xilinx.github.io/kria-apps-docs/kv260/2022.1/build/html/docs/linux_boot.html))
 
 ```bash
 sudo apt search kria-dashboard
