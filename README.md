@@ -24,10 +24,13 @@ sudo apt install kria-dashboard
 To start Bokeh server manually, use one of the following commands:
 
 ```bash
-sudo bokeh serve --show --allow-websocket-origin=*IP_ADDRESS*:5006 /usr/lib/python3.9/site-packages/kria-dashboard 
-#tio: use 
+sudo bokeh serve --show --allow-websocket-origin=*IP_ADDRESS*:5006 /usr/lib/python3/site-packages/kria-dashboard 
+# use 
 #   sudo find / -iname "kria-dashboard"
 # to find the folder if its not in the above python path
+# if xlnx-platformstats could not be imported, it can be installed with:
+#    sudo apt install python3-xlnx-platformstats
+# note that xilinx-apps/ppa was added during initial linux boot setup
 ```
 
 You can also manually clone kria-dashboard to use:
