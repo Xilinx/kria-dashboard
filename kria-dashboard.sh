@@ -23,11 +23,23 @@
 #
 #**********************************************************************
 
+ip=""
 
-ip=$(ip -4 addr show eth0 | grep -oE "inet ([0-9]{1,3}[\.]){3}[0-9]{1,3}" | cut -d ' ' -f2)
-if [ -z "$ip" ] && [ -d /sys/class/net/eth1 ]; then
-    ip=$(ip -4 addr show eth1 | grep -oE "inet ([0-9]{1,3}[\.]){3}[0-9]{1,3}" | cut -d ' ' -f2)
+# Preferred devices in order
+for dev in eth0 end0 eth1 end1; do
+    ip link show "$dev" >/dev/null 2>&1 || continue
+    temp_ip="$(ip -4 -o addr show dev "$dev" scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n1)"
+    if [ -n "$temp_ip" ]; then
+        ip="$temp_ip"
+        break
+    fi
+done
+
+# Fallback: pick first global IPv4 on any interface
+if [ -z "$ip" ]; then
+    ip="$(ip -4 -o addr show scope global | awk '{print $4}' | cut -d/ -f1 | head -n1)"
 fi
+
 
 python_path=($(python3 -m site | grep packages | grep usr | sed 's/,//g' | sed 's/ //g'| sed 's/^.//;s/.$//'))
 
