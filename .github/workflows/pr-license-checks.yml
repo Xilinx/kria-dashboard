@@ -10,10 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Displays PR information
+      run: |
+        echo "PR Head Ref: ${{ github.event.pull_request.head.ref }}"
+        echo "PR Head Repo: ${{ github.event.pull_request.head.repo.full_name }}"
+    
+    - name: Checkout the repository where the PR is raised
       uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-    - name: Checkout yocto-scripts repo
+    - name: Checkout base yocto-scripts repo
       uses: actions/checkout@v2
       with:
         repository: Xilinx/yocto-scripts
@@ -33,7 +41,7 @@ jobs:
       env:
         PAT_TOKEN: ${{ secrets.GH_PAT }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
-        GH_REPO_NAME: ${{ github.repository }}
+        GH_REPO_NAME: ${{ github.event.pull_request.base.repo.full_name }}
       run: |
         echo "PR_NUMBER: $PR_NUMBER"
         echo "GH_REPO_NAME: $GH_REPO_NAME"
@@ -57,7 +65,6 @@ jobs:
       if: always()
       run: |
         COMMENT_BODY=$(cat license_result.txt)
-        # Replace newline characters with '\n' to properly format the JSON payload
         COMMENT_BODY=$(echo "$COMMENT_BODY" | sed 's/$/\\n/g' | tr -d '\n')
         echo "Posting comment to PR#${{ github.event.pull_request.number }}:"
         echo "Posting comment on this repo#${{ github.repository }}:"
